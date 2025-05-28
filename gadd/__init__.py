@@ -1,4 +1,40 @@
-from .gadd import GADD
-from .sequences import DDSequence, StandardSequences, DDStrategy
-from .library import SequenceUtility
-from .utility_functions import UtilityFunction
+"""GADD: Genetic Algorithm for Dynamical Decoupling optimization."""
+
+from .gadd import GADD, TrainingConfig, TrainingState, TrainingResult
+from .sequences import DDSequence, DDStrategy, StandardSequences
+from .utility_functions import (
+    UtilityFunction,
+    SuccessProbability,
+    OneNormDistance,
+    GHZUtility,
+    UtilityFactory,
+    create_utility_function,
+)
+from .experiments import (
+    create_bernstein_vazirani_circuit,
+    create_ghz_circuit,
+    run_bv_experiment,
+    run_ghz_experiment,
+)
+
+__version__ = "0.1.0"
+
+__all__ = [
+    "GADD",
+    "TrainingConfig",
+    "TrainingState",
+    "TrainingResult",
+    "DDSequence",
+    "DDStrategy",
+    "StandardSequences",
+    "UtilityFunction",
+    "SuccessProbability",
+    "OneNormDistance",
+    "GHZUtility",
+    "UtilityFactory",
+    "create_utility_function",
+    "create_bernstein_vazirani_circuit",
+    "create_ghz_circuit",
+    "run_bv_experiment",
+    "run_ghz_experiment",
+]

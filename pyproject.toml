@@ -1,6 +1,121 @@
 [build-system]
-requires = ["setuptools", "wheel"]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "gadd"
+version = "0.1.0"
+description = "Genetic Algorithm for Dynamical Decoupling (GADD) implementation using Qiskit"
+readme = "README.md"
+license = {text = "Apache-2.0"}
+keywords = [
+    "quantum computing",
+    "dynamical decoupling", 
+    "genetic algorithm",
+    "qiskit",
+    "quantum error mitigation"
+]
+classifiers = [
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: Apache Software License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9", 
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Physics",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
+requires-python = ">=3.9"
+dependencies = [
+    "qiskit>=1.0",
+    "qiskit-ibm-runtime>=0.28.0",
+    "rustworkx>=0.13.0",
+    "numpy>=1.21.0",
+    "scipy>=1.8.0",
+    "matplotlib>=3.5.0",
+    "pandas>=1.4.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=6.0",
+    "pytest-cov",
+    "black>=22.0",
+    "flake8>=4.0",
+    "mypy>=0.950",
+    "pre-commit>=2.17",
+]
+docs = [
+    "sphinx>=4.0",
+    "sphinx-rtd-theme",
+    "nbsphinx",
+    "jupyter",
+]
+
+[project.urls]
+Paper = "https://arxiv.org/abs/2403.02294"
+Homepage = "https://github.com/Qiskit-Community/gadd"
+Repository = "https://github.com/Qiskit-Community/gadd.git"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["gadd*"]
 
 [tool.black]
-line-length = 100
+line-length = 88
 target-version = ['py39', 'py310', 'py311', 'py312']
+extend-exclude = '''
+/(
+  # directories
+  \.eggs
+  | \.git
+  | \.hg
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | build
+  | dist
+)/
+'''
+
+[tool.mypy]
+python_version = "3.9"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+check_untyped_defs = true
+disallow_untyped_decorators = true
+no_implicit_optional = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+warn_no_return = true
+warn_unreachable = true
+strict_equality = true
+
+[tool.pytest.ini_options]
+minversion = "6.0"
+addopts = "-ra -q --strict-markers --cov=gadd --cov-report=term-missing"
+testpaths = [
+    "tests",
+]
+
+[tool.coverage.run]
+source = ["gadd"]
+omit = [
+    "*/tests/*",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "if self.debug:",
+    "if settings.DEBUG",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if 0:",
+    "if __name__ .__main__.:",
+]

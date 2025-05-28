@@ -1,4 +1,4 @@
-# File: tests/test_utility_functions.py
+"""Tests for utility functions."""
 
 import unittest
 from qiskit.result import QuasiDistribution, Counts

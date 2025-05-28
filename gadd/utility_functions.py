@@ -105,6 +105,41 @@ class UtilityFunction(ABC):
             raise ValueError("Target state must be a binary string")
 
 
+def create_utility_function(
+    circuit: QuantumCircuit,
+    utility_type: str = "success_probability",
+    target_state: Optional[Union[str, int]] = None,
+    **kwargs,
+) -> UtilityFunction:
+    """
+    Create a utility function for a given circuit.
+
+    Args:
+        circuit: Quantum circuit to evaluate.
+        utility_type: Type of utility function ('success_probability', 'ghz', 'one_norm').
+        target_state: Target state for success probability (defaults to all-zero state).
+        **kwargs: Additional arguments for specific utility functions.
+
+    Returns:
+        UtilityFunction instance.
+    """
+    if utility_type == "success_probability":
+        if target_state is None:
+            target_state = "0" * circuit.num_qubits
+        return SuccessProbability(target_state)
+
+    elif utility_type == "ghz":
+        return GHZUtility(circuit.num_qubits)
+
+    elif utility_type == "one_norm":
+        if "ideal_distribution" not in kwargs:
+            raise ValueError("ideal_distribution required for one_norm utility")
+        return OneNormDistance(kwargs["ideal_distribution"])
+
+    else:
+        raise ValueError(f"Unknown utility type: {utility_type}")
+
+
 class SuccessProbability(UtilityFunction):
     """Utility function based on success probability of measuring a target state."""
 

@@ -1,32 +1,85 @@
 from typing import List, Tuple, Optional, Callable, Dict, Any, Union
+from dataclasses import dataclass, field, asdict
+from datetime import datetime
+import json
+import time
+import os
 
 import rustworkx as rx
 
 import numpy as np
-from numpy.random import Generator, default_rng
-from numpy.random.bit_generator import BitGenerator, SeedSequence
+from numpy.random import BitGenerator, Generator, SeedSequence, default_rng
 
 from qiskit import QuantumCircuit
 from qiskit.providers import Backend
+from qiskit.transpiler import InstructionDurations
 from qiskit_ibm_runtime import Sampler
 import matplotlib.pyplot as plt
-from dataclasses import dataclass
+
 from .sequences import DDStrategy, DDSequence, StandardSequences
-from .library import *
-from .utility_functions import UtilityFunction
+from .group_operations import complete_sequence_to_identity
+from .circuit_padding import apply_dd_strategy as _apply_dd_strategy
+from .utility_functions import UtilityFunction, SuccessProbability
 
 
 @dataclass
 class TrainingConfig:
-    """Configuration parameters for GADD training."""
+    """Configuration parameters for GADD training.
 
-    population_size: int = 16
+    Args:
+        pop_size (int): Size of the population (K in the paper).
+        sequence_length (int): Length of each DD sequence (L in the paper).
+        parent_fraction (float): Fraction of population to use as parents for reproduction.
+        n_iterations (int): Number of GA iterations to run.
+        mutation_probability (float): Initial probability of mutation.
+        optimization_level (int): Qiskit transpilation optimization level.
+        shots (int): Number of shots for quantum circuit execution.
+        num_colors (int): Number of distinct sequences per strategy (C in the paper).
+        group_size (int): Size of the decoupling group (|G| in the paper).
+        mode (str): Mode for generating initial population.
+        dynamic_mutation (bool): Whether to dynamically adjust mutation probability.
+        mutation_decay (float): Factor to adjust mutation probability.
+    """
+
+    pop_size: int = 16
     sequence_length: int = 8
-    parent_fraction: float = 0.25
+    parent_fraction: float = 0.25  # Fraction of K to use as parents
     n_iterations: int = 20
     mutation_probability: float = 0.75
     optimization_level: int = 1
     shots: int = 4000
+    num_colors: int = 3
+    group_size: int = 8
+    mode: str = "random"
+    dynamic_mutation: bool = True
+    mutation_decay: float = 0.1
+
+    def to_dict(self) -> Dict[str, Any]:
+        return asdict(self)
+
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> "TrainingConfig":
+        return cls(**data)
+
+
+@dataclass
+class TrainingState:
+    """State of GADD training that can be serialized and resumed."""
+
+    population: List[str] = field(default_factory=list)
+    iteration: int = 0
+    best_scores: List[float] = field(default_factory=list)
+    best_sequences: List[str] = field(default_factory=list)
+    mutation_probability: float = 0.75
+    iteration_data: List[Dict[str, Any]] = field(default_factory=list)
+    timestamp: str = field(default_factory=lambda: datetime.now().isoformat())
+
+    def to_dict(self) -> Dict[str, Any]:
+        return asdict(self)
+
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> "TrainingState":
+        return cls(**data)
 
 
 @dataclass
@@ -34,8 +87,18 @@ class TrainingResult:
     """Results from GADD training."""
 
     best_sequence: DDStrategy
-    iteration_data: List[Dict[str, float]]
+    best_score: float
+    iteration_data: List[Dict[str, Any]]
     comparison_data: Dict[str, float]
+    final_population: List[str]
+    config: TrainingConfig
+    training_time: float
+
+    def to_dict(self) -> Dict[str, Any]:
+        result_dict = asdict(self)
+        result_dict["best_sequence"] = self.best_sequence.to_dict()
+        result_dict["config"] = self.config.to_dict()
+        return result_dict
 
 
 class GADD:
@@ -47,17 +110,32 @@ class GADD:
         utility_function: Optional[UtilityFunction] = None,
         coloring: Optional[Dict] = None,
         seed: Optional[Union[int, SeedSequence, BitGenerator, Generator]] = None,
+        config: Optional[TrainingConfig] = None,
     ):
         """Initialize the GADD class."""
         self._backend = backend
         self._utility_function = utility_function
         self._seed = seed
         self._rng = default_rng(seed=seed)
-        self.config = TrainingConfig()
+        self._population = None
+        self.config = config or TrainingConfig()
 
-        if not coloring:
-            # output is {qubit: color} key-value pairs
-            self._coloring = rx.graph_greedy_color(backend.coupling_map.graph.to_undirected())
+        # Set up coloring
+        if coloring is None and backend is not None:
+            # Default greedy coloring of coupling map
+            if hasattr(backend, "coupling_map") and backend.coupling_map:
+                self._coloring = rx.graph_greedy_color(backend.coupling_map.graph.to_undirected())
+            else:
+                # Fallback: all qubits same color
+                self._coloring = {i: 0 for i in range(backend.num_qubits)}
+        else:
+            self._coloring = coloring or {}
+
+        # Decoupling group - matches paper's group G
+        self._decoupling_group = ["Ip", "Im", "Xp", "Xm", "Yp", "Ym", "Zp", "Zm"]
+
+        # Training state for resume capability
+        self._training_state = None
 
     @property
     def seed(self):
@@ -83,244 +161,460 @@ class GADD:
     @coloring.setter
     def coloring(self, coloring):
         if not isinstance(coloring, dict):
-            raise TypeError(
-                "Coloring must be either `greedy` or a dictionary keyed to colors with a list of indices for each."
-            )
+            raise TypeError("Coloring must be a dictionary keyed by qubit index with color values")
         self._coloring = coloring
+
+    def apply_dd(
+        self,
+        strategy: DDStrategy,
+        target_circuit: QuantumCircuit,
+        backend: Optional[Backend] = None,
+        staggered: bool = False,
+    ) -> QuantumCircuit:
+        """
+        Apply a DD strategy to a target circuit.
+
+        This is a convenience method that handles the circuit padding
+        with the appropriate coloring for the backend.
+
+        Args:
+            strategy: DD strategy to apply.
+            target_circuit: Circuit to apply DD to.
+            backend: Backend for coloring (uses self.backend if None).
+            staggered: Whether to apply CR-aware staggering for crosstalk suppression.
+
+        Returns:
+            Circuit with DD sequences applied.
+        """
+        # Use provided backend or fall back to instance backend
+        backend = backend or self._backend
+
+        # Get coloring for the backend
+        if backend and hasattr(backend, "coupling_map") and backend.coupling_map:
+            coloring = rx.graph_greedy_color(backend.coupling_map.graph.to_undirected())
+        else:
+            coloring = self._coloring or {i: 0 for i in range(target_circuit.num_qubits)}
+
+        # Get instruction durations from backend if available
+        instruction_durations = None
+        if backend:
+            try:
+                from qiskit.transpiler import InstructionDurations
+
+                instruction_durations = InstructionDurations.from_backend(backend)
+            except:
+                pass
+
+        # Apply the DD strategy
+        return _apply_dd_strategy(
+            target_circuit,
+            strategy,
+            coloring,
+            instruction_durations=instruction_durations,
+            staggered=staggered,
+        )
 
     def train(
         self,
         sampler: Sampler,
         training_circuit: QuantumCircuit,
-        utility_function: Callable[[QuantumCircuit, List[float]], float],
-        mode: str = "random",
+        utility_function: Optional[Union[Callable, UtilityFunction]] = None,
+        mode: Optional[str] = None,
         save_iterations: bool = True,
-        comparison_seqs: List[str] = None,
+        comparison_seqs: Optional[List[str]] = None,
+        resume_from_state: Optional[TrainingState] = None,
+        save_path: Optional[str] = None,
     ) -> Tuple[DDStrategy, TrainingResult]:
-        """Train DD sequences using genetic algorithm."""
+        """Train DD sequences using genetic algorithm.
+
+        Args:
+            sampler: Qiskit Sampler for circuit execution.
+            training_circuit: Circuit to train on.
+            utility_function: Function to evaluate circuit performance.
+                Can be a callable(circuit, result) -> float or a UtilityFunction instance.
+            mode: Population initialization mode ('random' or 'uniform').
+            save_iterations: Whether to save iteration data.
+            comparison_seqs: Standard sequences to compare against.
+            resume_from_state: Previous training state to resume from.
+            save_path: Path to save training checkpoints.
+
+        Returns:
+            Tuple of (best_strategy, training_result).
+        """
+        start_time = time.time()
+
+        # Normalize utility function
+        if utility_function is None:
+            # Default to success probability for all-zero state
+            utility_function = SuccessProbability("0" * training_circuit.num_qubits)
+
+        # If it's a UtilityFunction instance, extract the compute method
+        if hasattr(utility_function, "compute"):
+            utility_func = lambda circuit, result: utility_function.compute(
+                result.quasi_dists[0] if hasattr(result, "quasi_dists") else result.get_counts()
+            )
+        else:
+            utility_func = utility_function
+
+        # Set mode from config if not provided
+        if mode is None:
+            mode = self.config.mode
 
         if mode not in ["random", "uniform"]:
-            raise TypeError("Mode must be one of 'random' or 'uniform'.")
+            raise ValueError("Mode must be one of 'random' or 'uniform'.")
 
-        # Initialize population
-        population = self._initialize_population()
-        iteration_data = []
+        # Initialize or resume training state
+        if resume_from_state is not None:
+            self._training_state = resume_from_state
+            print(f"Resuming training from iteration {self._training_state.iteration}")
+        else:
+            # Fresh training - initialize population
+            self._training_state = TrainingState()
+            self._training_state.population = self._initialize_population(mode)
+            self._training_state.mutation_probability = self.config.mutation_probability
 
-        for iteration in range(self.config.n_iterations):
-            # Evaluate population
+        # Training loop
+        for iteration in range(self._training_state.iteration, self.config.n_iterations):
+            print(f"GA Iteration {iteration + 1}/{self.config.n_iterations}")
+
+            # Evaluate current population
             scores = self._evaluate_population(
-                population, sampler, training_circuit, utility_function
+                self._training_state.population, sampler, training_circuit, utility_func
             )
+
+            # Track best performance
+            best_score = max(scores.values())
+            best_sequence = max(scores, key=scores.get)
+
+            self._training_state.best_scores.append(best_score)
+            self._training_state.best_sequences.append(best_sequence)
 
             # Save iteration data
             if save_iterations:
-                iteration_data.append(
-                    {
-                        "generation": iteration,
-                        "best_score": max(scores.values()),
-                        "population": scores,
-                    }
+                iteration_info = {
+                    "iteration": iteration,
+                    "best_score": best_score,
+                    "mean_score": np.mean(list(scores.values())),
+                    "std_score": np.std(list(scores.values())),
+                    "mutation_probability": self._training_state.mutation_probability,
+                    "population_diversity": self._calculate_diversity(
+                        self._training_state.population
+                    ),
+                }
+                self._training_state.iteration_data.append(iteration_info)
+
+            # Dynamic mutation adjustment
+            if self.config.dynamic_mutation and iteration > 0:
+                self._adjust_mutation_probability(iteration_info)
+
+            # Generate next population (except for last iteration)
+            if iteration < self.config.n_iterations - 1:
+                # Generate offspring from current population
+                new_population = self._generate_offspring(self._training_state.population, scores)
+
+                # Evaluate the combined population (parents + offspring)
+                all_scores = self._evaluate_population(
+                    new_population, sampler, training_circuit, utility_func
                 )
 
-            # Generate next population
-            population = self._next_generation(population, scores)
+                # Select top K for next generation
+                sorted_combined = sorted(new_population, key=lambda x: all_scores[x], reverse=True)
+                self._training_state.population = sorted_combined[: self.config.pop_size]
 
-        # Get best sequence
-        best_sequence = max(population, key=lambda x: scores[x])
+            # Update iteration counter
+            self._training_state.iteration = iteration + 1
+
+            # Save checkpoint if path provided
+            if save_path:
+                self._save_checkpoint(save_path)
+
+            print(f"Best score: {best_score:.4f}, Mean: {np.mean(list(scores.values())):.4f}")
+
+        # Get final best sequence
+        final_scores = self._evaluate_population(
+            self._training_state.population, sampler, training_circuit, utility_func
+        )
+        best_sequence = max(final_scores, key=final_scores.get)
+        best_score = final_scores[best_sequence]
 
         # Run comparison sequences if requested
         comparison_data = {}
         if comparison_seqs:
             comparison_data = self._evaluate_standard_sequences(
-                comparison_seqs, sampler, training_circuit, utility_function
+                comparison_seqs, sampler, training_circuit, utility_func
             )
 
-        return (
-            DDStrategy(best_sequence),
-            TrainingResult(DDStrategy(best_sequence), iteration_data, comparison_data),
+        # Calculate training time
+        training_time = time.time() - start_time
+
+        # Create result
+        result = TrainingResult(
+            best_sequence=self._create_strategy_from_string(best_sequence),
+            best_score=best_score,
+            iteration_data=self._training_state.iteration_data,
+            comparison_data=comparison_data,
+            final_population=self._training_state.population.copy(),
+            config=self.config,
+            training_time=training_time,
         )
 
-    def plot(self, sequence: DDSequence, results: TrainingResult):
-        """Plot training progression and comparison data."""
-        fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5))
+        return self._create_strategy_from_string(best_sequence), result
 
-        # Plot training progression
-        generations = [d["generation"] for d in results.iteration_data]
-        scores = [d["best_score"] for d in results.iteration_data]
-        ax1.plot(generations, scores, "-o")
-        ax1.set_xlabel("Generation")
-        ax1.set_ylabel("Best Score")
-        ax1.set_title("Training Progression")
-
-        # Plot comparison data
-        if results.comparison_data:
-            names = list(results.comparison_data.keys())
-            values = list(results.comparison_data.values())
-            ax2.bar(names, values)
-            ax2.set_xlabel("Sequence Type")
-            ax2.set_ylabel("Score")
-            ax2.set_title("Sequence Comparison")
-            plt.xticks(rotation=45)
-
-        plt.tight_layout()
-        plt.show()
-
-    def run(
-        self, strategy: DDStrategy, target_circuit: QuantumCircuit, sampler: Sampler
-    ) -> Dict[str, float]:
-        """Run a specific sequence on a target circuit."""
-        # TODO: add color map
-        padded_circuit = pad_sequence(target_circuit, sequence)
-        result = sampler.run(padded_circuit).result()
-        return self._process_results(result)
-
-    def _initialize_population(pop_size, seq_length, num_colors, group_size=8, mode="random"):
-        """
-        Initialize population of DD sequences with specified characteristics
-
-        Args:
-            pop_size (int): Size of the population to generate
-            seq_length (int): Length of each DD sequence
-            num_colors (int): Number of distinct sequences per strategy
-            group_size (int): Size of the group (default 8 for {I,Ib,X,Xb,Y,Yb,Z,Zb})
-            mode (str): Mode for generating initial population
-                - "uniform": Each group element appears equally often in each position
-                - "random": Random population meeting group constraints
-
-        Returns:
-            list[str]: List of DD strategies encoded as strings
-
-        Note:
-            Each strategy consists of num_colors sequences of length seq_length
-            The sequences must multiply to identity under group multiplication
-        """
+    def _initialize_population(self, mode: str = "random") -> List[str]:
+        """Initialize population of DD sequences."""
         if mode == "uniform":
-            # Calculate how many times each element should appear at each position
-            reps_per_element = pop_size // group_size
-            if reps_per_element == 0:
-                raise ValueError(
-                    "Population size must be at least as large as group size for uniform mode"
-                )
+            return self._initialize_uniform_population()
+        else:
+            return self._initialize_random_population()
 
-            population = []
+    def _initialize_uniform_population(self) -> List[str]:
+        """Initialize uniform population as described in the paper."""
+        population = []
+        group_size = len(self._decoupling_group)
 
-            # Generate base patterns that are cyclic shifts of group elements
-            base_patterns = []
-            for shift in range(seq_length):
-                pattern = ""
-                for pos in range(seq_length - 1):  # Leave last element to enforce constraint
-                    element = (pos + shift) % group_size
-                    pattern += str(element)
-                base_patterns.append(pattern)
+        # Calculate repetitions per element
+        reps_per_element = self.config.pop_size // group_size
+        if reps_per_element == 0:
+            reps_per_element = 1
 
-            # For each base pattern, generate variants by permuting elements
-            for pattern in base_patterns:
-                for _ in range(reps_per_element):
-                    # Convert pattern to list for manipulation
-                    sequence = list(pattern)
+        # Generate base patterns with cyclic shifts
+        base_patterns = []
+        for shift in range(min(self.config.sequence_length, self.config.pop_size)):
+            pattern = []
+            for pos in range(self.config.sequence_length - 1):
+                element = (pos + shift) % group_size
+                pattern.append(element)
+            base_patterns.append(pattern)
 
-                    # Calculate last element to make sequence multiply to identity
-                    prefix_product = 0
-                    for element in sequence:
-                        prefix_product = multiply(prefix_product, int(element))
-                    last_element = invert(prefix_product)
-                    sequence.append(str(last_element))
+        # Generate variants for each base pattern
+        for pattern in base_patterns:
+            if len(population) >= self.config.pop_size:
+                break
 
-                    # Create full strategy by repeating for each color
-                    strategy = "".join(sequence) * num_colors
-                    population.append(strategy)
+            sequence = pattern.copy()
 
-            # If we need more sequences to reach pop_size, add random valid sequences
-            while len(population) < pop_size:
-                random_sequence = list(str(np.random.randint(0, group_size)) * (seq_length - 1))
-                last_element = invert(multiply_list([int(x) for x in random_sequence]))
-                random_sequence.append(str(last_element))
-                strategy = "".join(random_sequence) * num_colors
+            # Calculate last element to make sequence multiply to identity
+            last_element = complete_sequence_to_identity(sequence)
+            sequence.append(last_element)
+
+            # Create strategy for all colors
+            strategy = self._encode_strategy(sequence)
+            population.append(strategy)
+
+        # Fill remaining slots with random sequences
+        while len(population) < self.config.pop_size:
+            sequence = self._generate_random_sequence()
+            strategy = self._encode_strategy(sequence)
+            if strategy not in population:
                 population.append(strategy)
-
-        else:  # Random mode
-            population = []
-            while len(population) < pop_size:
-                # Generate random sequences for each color that multiply to identity
-                strategy_parts = []
-                for _ in range(num_colors):
-                    sequence = list(str(np.random.randint(0, group_size)) * (seq_length - 1))
-                    last_element = invert(multiply_list([int(x) for x in sequence]))
-                    sequence.append(str(last_element))
-                    strategy_parts.append("".join(sequence))
-                strategy = "".join(strategy_parts)
-
-                # Only add if unique
-                if strategy not in population:
-                    population.append(strategy)
 
         return population
 
-    # def _initialize_population(self) -> List[DDSequence]:
-    #     """Initialize population of DD sequences."""
-    #     population = []
-    #     for _ in range(self.config.population_size):
-    #         sequence = self._generate_random_sequence()
-    #         population.append(sequence)
-    #     return population
+    def _initialize_random_population(self) -> List[str]:
+        """Initialize random population."""
+        population = []
+        while len(population) < self.config.pop_size:
+            sequence = self._generate_random_sequence()
+            strategy = self._encode_strategy(sequence)
+            if strategy not in population:
+                population.append(strategy)
+        return population
 
-    def _evaluate_population(
-        self,
-        population: List[DDSequence],
-        sampler: Sampler,
-        circuit: QuantumCircuit,
-        utility_function: Callable,
-    ) -> Dict[DDSequence, float]:
-        """Evaluate fitness of all sequences in population."""
-        scores = {}
-        for sequence in population:
-            padded_circuit = pad_sequence(circuit, sequence)
-            result = sampler.run(padded_circuit).result()
-            scores[sequence] = utility_function(padded_circuit, result)
-        return scores
+    def _generate_random_sequence(self) -> List[int]:
+        """Generate a random DD sequence that multiplies to identity."""
+        sequence = []
+        for _ in range(self.config.sequence_length - 1):
+            sequence.append(self._rng.integers(0, self.config.group_size))
 
-    def _next_generation(
-        self, population: List[DDSequence], scores: Dict[DDSequence, float]
-    ) -> List[DDSequence]:
-        """Generate next generation through selection, crossover and mutation."""
-        # Sort population by fitness
+        # Calculate last element to ensure multiplication to identity
+        last_element = complete_sequence_to_identity(sequence)
+        sequence.append(last_element)
+
+        return sequence
+
+    def _encode_strategy(self, sequence: List[int]) -> str:
+        """Encode a sequence as a strategy string."""
+        # For multi-color strategies, repeat sequence for each color
+        strategy_parts = []
+        for _ in range(self.config.num_colors):
+            strategy_parts.append("".join(str(x) for x in sequence))
+        return "".join(strategy_parts)
+
+    def _decode_sequence(self, strategy: str) -> List[str]:
+        """Decode strategy string back to gate sequence."""
+        # Extract first color sequence (they should all be the same for now)
+        seq_len = self.config.sequence_length
+        first_sequence = strategy[:seq_len]
+
+        gates = []
+        for char in first_sequence:
+            gates.append(self._decoupling_group[int(char)])
+
+        return gates
+
+    def _create_strategy_from_string(self, strategy: str) -> DDStrategy:
+        """Create DDStrategy object from encoded string."""
+        gates = self._decode_sequence(strategy)
+        dd_sequence = DDSequence(gates)
+
+        # Create strategy with same sequence for all colors
+        sequences = []
+        for _ in range(self.config.num_colors):
+            sequences.append(dd_sequence.copy())
+
+        return DDStrategy(sequences)
+
+
+def _evaluate_population(
+    self,
+    population: List[str],
+    sampler: Sampler,
+    circuit: QuantumCircuit,
+    utility_function: Callable,
+) -> Dict[str, float]:
+    """Evaluate fitness of all sequences in population."""
+    scores = {}
+
+    # Batch circuits for efficiency
+    circuits_to_run = []
+    strategy_map = {}
+
+    for i, strategy_str in enumerate(population):
+        # Create strategy object
+        dd_strategy = self._create_strategy_from_string(strategy_str)
+
+        # Apply DD to circuit
+        padded_circuit = self.apply_dd(dd_strategy, circuit)
+        circuits_to_run.append(padded_circuit)
+        strategy_map[i] = strategy_str
+
+    # Run all circuits in a single job for efficiency
+    print(f"  Evaluating {len(circuits_to_run)} circuits...", end="\r")
+    job = sampler.run(circuits_to_run, shots=self.config.shots)
+    results = job.result()
+
+    # Calculate utilities
+    for i, strategy_str in strategy_map.items():
+        # Extract result for this circuit
+        if hasattr(results, "quasi_dists"):
+            circuit_result = type(
+                "Result",
+                (),
+                {
+                    "quasi_dists": [results.quasi_dists[i]],
+                    "metadata": results.metadata[i] if hasattr(results, "metadata") else {},
+                },
+            )
+        else:
+            circuit_result = results[i]
+
+        # Calculate utility
+        scores[strategy_str] = utility_function(circuits_to_run[i], circuit_result)
+
+    print(f"  Evaluated {len(population)} strategies. Best: {max(scores.values()):.4f}")
+    return scores
+
+    def _generate_offspring(self, population: List[str], scores: Dict[str, float]) -> List[str]:
+        """Generate offspring population following the paper's GA approach.
+
+        1. Keep original K parents
+        2. Generate 2K offspring through reproduction
+        3. Return combined 3K population for evaluation and selection
+        """
+        K = len(population)
+
+        # Sort population and select parents
         sorted_pop = sorted(population, key=lambda x: scores[x], reverse=True)
-
-        # Select parents
-        n_parents = int(self.config.parent_fraction * len(population))
+        n_parents = max(2, int(self.config.parent_fraction * K))
         parents = sorted_pop[:n_parents]
 
-        # Generate offspring through crossover and mutation
+        # Generate 2K offspring
         offspring = []
-        while len(offspring) < len(population) - len(parents):
-            p1, p2 = np.random.choice(parents, 2, replace=False)
+        for _ in range(2 * K):
+            # Select two parents for reproduction
+            p1, p2 = self._select_parents(parents, scores)
             child = self._crossover(p1, p2)
-            if np.random.random() < self.config.mutation_probability:
+
+            # Apply mutation with probability
+            if self._rng.random() < self._training_state.mutation_probability:
                 child = self._mutate(child)
+
             offspring.append(child)
 
-        return parents + offspring
+        # Return combined population (K parents + 2K offspring = 3K total)
+        return population + offspring
 
-    def _generate_random_sequence(self) -> DDSequence:
-        """Generate a random DD sequence."""
-        sequence = []
-        for _ in range(self.config.sequence_length):
-            gate = np.random.choice(["I", "X", "Y", "Z"])
-            sequence.append(gate)
-        return DDSequence(sequence)
+    def _select_parents(self, parents: List[str], scores: Dict[str, float]) -> Tuple[str, str]:
+        """Select two parents using fitness-proportional selection."""
+        # Convert scores to probabilities
+        parent_scores = [scores[p] for p in parents]
+        min_score = min(parent_scores)
 
-    def _crossover(self, seq1: DDSequence, seq2: DDSequence) -> DDSequence:
-        """Perform crossover between two sequences."""
-        point = np.random.randint(1, len(seq1.gates))
-        child = seq1.gates[:point] + seq2.gates[point:]
-        return DDSequence(child)
+        # Shift scores to be positive and add small epsilon
+        adjusted_scores = [s - min_score + 0.001 for s in parent_scores]
+        total_score = sum(adjusted_scores)
+        probabilities = [s / total_score for s in adjusted_scores]
 
-    def _mutate(self, sequence: DDSequence) -> DDSequence:
-        """Mutate a sequence."""
-        idx = np.random.randint(len(sequence.gates))
-        gates = sequence.gates.copy()
-        gates[idx] = np.random.choice(["I", "X", "Y", "Z"])
-        return DDSequence(gates)
+        # Select two parents
+        indices = self._rng.choice(len(parents), size=2, replace=False, p=probabilities)
+        return parents[indices[0]], parents[indices[1]]
+
+    def _crossover(self, parent1: str, parent2: str) -> str:
+        """Perform crossover between two strategy strings."""
+        seq_len = self.config.sequence_length
+
+        # Work with first color sequence
+        seq1 = parent1[:seq_len]
+        seq2 = parent2[:seq_len]
+
+        # Random crossover point
+        point = self._rng.integers(1, seq_len)
+
+        # Create child sequence
+        child_seq = seq1[:point] + seq2[point:-1]  # Exclude last element
+
+        # Calculate last element to maintain group constraint
+        child_indices = [int(c) for c in child_seq]
+        last_element = complete_sequence_to_identity(child_indices)
+        child_seq += str(last_element)
+
+        # Replicate for all colors
+        return child_seq * self.config.num_colors
+
+    def _mutate(self, strategy: str) -> str:
+        """Mutate a strategy string."""
+        seq_len = self.config.sequence_length
+        seq = list(strategy[:seq_len])
+
+        # Mutate random position (except last)
+        if len(seq) > 1:
+            idx = self._rng.integers(0, len(seq) - 1)
+            seq[idx] = str(self._rng.integers(0, self.config.group_size))
+
+            # Recalculate last element
+            seq_indices = [int(c) for c in seq[:-1]]
+            last_element = complete_sequence_to_identity(seq_indices)
+            seq[-1] = str(last_element)
+
+        # Replicate for all colors
+        return "".join(seq) * self.config.num_colors
+
+    def _adjust_mutation_probability(self, iteration_info: Dict[str, Any]):
+        """Dynamically adjust mutation probability based on population diversity."""
+        diversity = iteration_info.get("population_diversity", 0.5)
+
+        if diversity < 0.1:  # Low diversity - increase mutation
+            self._training_state.mutation_probability = min(
+                0.9, self._training_state.mutation_probability + self.config.mutation_decay
+            )
+        elif diversity > 0.8:  # High diversity - decrease mutation
+            self._training_state.mutation_probability = max(
+                0.1, self._training_state.mutation_probability - self.config.mutation_decay
+            )
+
+    def _calculate_diversity(self, population: List[str]) -> float:
+        """Calculate population diversity as fraction of unique individuals."""
+        return len(set(population)) / len(population)
 
     def _evaluate_standard_sequences(
         self,
@@ -329,19 +623,163 @@ class GADD:
         circuit: QuantumCircuit,
         utility_function: Callable,
     ) -> Dict[str, float]:
-        """Evaluate standard DD sequences."""
+        """Evaluate standard DD sequences for comparison."""
         results = {}
         std_sequences = StandardSequences()
 
         for seq_name in sequences:
-            sequence = std_sequences.get(seq_name)
-            padded_circuit = pad_sequence(circuit, sequence)
-            result = sampler.run(padded_circuit).result()
-            results[seq_name] = utility_function(padded_circuit, result)
+            print(f"Evaluating standard sequence: {seq_name}")
+            try:
+                sequence = std_sequences.get(seq_name.lower())
+                strategy = DDStrategy.from_single_sequence(
+                    sequence, n_colors=self.config.num_colors
+                )
+
+                # Check if this should be staggered
+                staggered = std_sequences.is_staggered(seq_name.lower())
+
+                padded_circuit = self.apply_dd(strategy, circuit, staggered=staggered)
+
+                job = sampler.run(padded_circuit, shots=self.config.shots)
+                result = job.result()
+                results[seq_name] = utility_function(padded_circuit, result)
+            except Exception as e:
+                print(f"Warning: Could not evaluate {seq_name}: {e}")
+                results[seq_name] = 0.0
 
         return results
 
-    def _process_results(self, result: Any) -> Dict[str, float]:
-        """Process measurement results."""
-        # TODO Implementation depends on specific result format
-        return {"success_probability": result.get_counts().get("0", 0) / result.shots}
+    def _save_checkpoint(self, save_path: str):
+        """Save training checkpoint."""
+        # Create directory if it doesn't exist
+        os.makedirs(save_path, exist_ok=True)
+
+        checkpoint = {
+            "state": self._training_state.to_dict(),
+            "config": self.config.to_dict(),
+            "timestamp": datetime.now().isoformat(),
+        }
+
+        filename = os.path.join(save_path, f"checkpoint_iter_{self._training_state.iteration}.json")
+        with open(filename, "w") as f:
+            json.dump(checkpoint, f, indent=2)
+
+        print(f"Checkpoint saved to {filename}")
+
+    def load_training_state(self, checkpoint_path: str) -> TrainingState:
+        """Load training state from checkpoint file."""
+        with open(checkpoint_path, "r") as f:
+            checkpoint = json.load(f)
+
+        return TrainingState.from_dict(checkpoint["state"])
+
+    def plot_training_progress(self, results: TrainingResult, save_path: Optional[str] = None):
+        """Plot training progression and comparison data."""
+        fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5))
+
+        # Plot training progression
+        iterations = [d["iteration"] for d in results.iteration_data]
+        best_scores = [d["best_score"] for d in results.iteration_data]
+        mean_scores = [d["mean_score"] for d in results.iteration_data]
+
+        ax1.plot(iterations, best_scores, "-o", label="Best Score")
+        ax1.plot(iterations, mean_scores, "-s", label="Mean Score", alpha=0.7)
+        ax1.fill_between(
+            iterations,
+            [d["mean_score"] - d["std_score"] for d in results.iteration_data],
+            [d["mean_score"] + d["std_score"] for d in results.iteration_data],
+            alpha=0.3,
+            label="±1 STD",
+        )
+        ax1.set_xlabel("Iteration")
+        ax1.set_ylabel("Utility Score")
+        ax1.set_title("Training Progression")
+        ax1.legend()
+        ax1.grid(True, alpha=0.3)
+
+        # Plot comparison data
+        if results.comparison_data:
+            names = list(results.comparison_data.keys())
+            values = list(results.comparison_data.values())
+
+            # Add GADD result for comparison
+            names.append("GADD")
+            values.append(results.best_score)
+
+            # Create bar plot
+            bars = ax2.bar(names, values)
+
+            # Highlight GADD bar
+            bars[-1].set_color("green")
+            bars[-1].set_alpha(0.8)
+
+            ax2.set_xlabel("DD Sequence")
+            ax2.set_ylabel("Utility Score")
+            ax2.set_title("Sequence Comparison")
+            plt.setp(ax2.xaxis.get_majorticklabels(), rotation=45, ha="right")
+
+            # Add value labels on bars
+            for bar, val in zip(bars, values):
+                ax2.text(
+                    bar.get_x() + bar.get_width() / 2,
+                    bar.get_height() + 0.01,
+                    f"{val:.3f}",
+                    ha="center",
+                    va="bottom",
+                )
+
+        plt.tight_layout()
+
+        if save_path:
+            plt.savefig(save_path, dpi=300, bbox_inches="tight")
+            print(f"Plot saved to {save_path}")
+        else:
+            plt.show()
+
+    def run(
+        self,
+        strategy: DDStrategy,
+        target_circuit: QuantumCircuit,
+        sampler: Sampler,
+        utility_function: Optional[Callable[[QuantumCircuit, Any], float]] = None,
+        staggered: bool = False,
+    ) -> Dict[str, Any]:
+        """Run a specific DD strategy on a target circuit.
+
+        Args:
+            strategy: DD strategy to apply.
+            target_circuit: Target quantum circuit.
+            sampler: Qiskit sampler for execution.
+            utility_function: Optional utility function to evaluate performance.
+            staggered: Whether to apply CR-aware staggering.
+
+        Returns:
+            Dictionary with execution results.
+        """
+        # Apply DD strategy to circuit
+        padded_circuit = self.apply_dd(strategy, target_circuit, staggered=staggered)
+
+        # Execute circuit
+        job = sampler.run(padded_circuit, shots=self.config.shots)
+        result = job.result()
+
+        # Get counts (handling different result formats)
+        if hasattr(result, "quasi_dists"):
+            counts = result.quasi_dists[0]
+        elif hasattr(result, "get_counts"):
+            counts = result.get_counts()
+        else:
+            raise ValueError("Unable to extract counts from result")
+
+        # Calculate utility if function provided
+        utility_value = None
+        if utility_function is not None:
+            utility_value = utility_function(padded_circuit, result)
+
+        return {
+            "counts": counts,
+            "utility": utility_value,
+            "padded_circuit": padded_circuit,
+            "staggered": staggered,
+            "result": result,  # Include full result for flexibility
+        }
