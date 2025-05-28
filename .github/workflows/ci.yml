@@ -197,9 +197,9 @@ jobs:
           make html SPHINXOPTS="--keep-going"
 
     - name: Deploy documentation
-        uses: JamesIves/github-pages-deploy-action@v4
-        with:
-          folder: docs/_build/html/
+      uses: JamesIves/github-pages-deploy-action@v4
+      with:
+        folder: docs/_build/html/
 
   # Build and Test Package Distribution
   build:
