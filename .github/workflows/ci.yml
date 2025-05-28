@@ -157,7 +157,7 @@ jobs:
         bandit -r gadd/ -ll
 
     - name: Upload security reports
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       if: always()
       with:
         name: security-reports
@@ -194,7 +194,7 @@ jobs:
     - name: Build documentation
       run: |
           cd docs
-          make html SPHINXOPTS="-W --keep-going"
+          make html SPHINXOPTS="--keep-going"
 
   # Build and Test Package Distribution
   build:

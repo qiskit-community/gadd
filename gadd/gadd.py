@@ -27,15 +27,15 @@ class TrainingConfig:
     """Configuration parameters for GADD training.
 
     Args:
-        pop_size (int): Size of the population (K in the paper).
-        sequence_length (int): Length of each DD sequence (L in the paper).
+        pop_size (int): Size of the population (``K`` in the paper).
+        sequence_length (int): Length of each DD sequence (``L`` in the paper).
         parent_fraction (float): Fraction of population to use as parents for reproduction.
         n_iterations (int): Number of GA iterations to run.
         mutation_probability (float): Initial probability of mutation.
         optimization_level (int): Qiskit transpilation optimization level.
         shots (int): Number of shots for quantum circuit execution.
-        num_colors (int): Number of distinct sequences per strategy (C in the paper).
-        group_size (int): Size of the decoupling group (|G| in the paper).
+        num_colors (int): Number of distinct sequences per strategy (``C`` in the paper).
+        group_size (int): Size of the decoupling group (``|G|`` in the paper).
         mode (str): Mode for generating initial population.
         dynamic_mutation (bool): Whether to dynamically adjust mutation probability.
         mutation_decay (float): Factor to adjust mutation probability.
