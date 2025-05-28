@@ -3,7 +3,7 @@
 import unittest
 from qiskit import QuantumCircuit
 from qiskit.circuit import Delay
-from qiskit.circuit.library import XGate, YGate, ZGate, CXGate
+from qiskit.circuit.library import XGate, ZGate, CXGate
 
 from gadd.circuit_padding import (
     DDPulse,

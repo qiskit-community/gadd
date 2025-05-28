@@ -205,8 +205,6 @@ class GADD:
         instruction_durations = None
         if backend:
             try:
-                from qiskit.transpiler import InstructionDurations
-
                 instruction_durations = InstructionDurations.from_backend(backend)
             except:
                 pass
