@@ -6,13 +6,11 @@ This module handles the insertion of DD pulses into quantum circuits
 during idle periods, following the approach described in the GADD paper.
 """
 
-from typing import List, Dict, Optional, Tuple
+from typing import List, Dict, Optional
 import numpy as np
 from qiskit import QuantumCircuit
 from qiskit.circuit import Instruction, Gate, Delay
 from qiskit.circuit.library import IGate, RXGate, RYGate, RZGate
-from qiskit.dagcircuit import DAGCircuit
-from qiskit.converters import circuit_to_dag, dag_to_circuit
 from qiskit.transpiler import InstructionDurations, PassManager
 from qiskit_ibm_runtime.transpiler.passes.scheduling import (
     ALAPScheduleAnalysis,
@@ -131,7 +129,9 @@ def apply_dd_strategy(
     # Create a copy of the circuit
     padded_circuit = circuit.copy()
     suffix = "_DD_staggered" if staggered else "_DD"
-    padded_circuit.name = f"{circuit.name}{suffix}" if circuit.name else f"circuit{suffix}"
+    padded_circuit.name = (
+        f"{circuit.name}{suffix}" if circuit.name else f"circuit{suffix}"
+    )
 
     # Get default durations if not provided
     if instruction_durations is None:
@@ -146,7 +146,9 @@ def apply_dd_strategy(
         # Color 0: symmetric spacing [1/2n, 1/n, ..., 1/n, 1/2n]
         # Color 1: early spacing [1/n, 1/n, ..., 1/n, 0]
         # Color 2: late spacing [0, 1/n, ..., 1/n, 1/n]
-        def get_staggered_spacing(color_idx: int, n_pulses: int) -> Optional[List[float]]:
+        def get_staggered_spacing(
+            color_idx: int, n_pulses: int
+        ) -> Optional[List[float]]:
             if color_idx == 0 or n_pulses < 2:
                 return None  # Use default symmetric
 
@@ -188,7 +190,9 @@ def apply_dd_strategy(
             continue
 
         # Get spacing for this color if staggered
-        alt_spacings = get_staggered_spacing(color_idx, len(dd_gates)) if staggered else None
+        alt_spacings = (
+            get_staggered_spacing(color_idx, len(dd_gates)) if staggered else None
+        )
 
         # Create pass manager for this color's qubits
         pm = PassManager(

@@ -6,7 +6,7 @@ from typing import Optional, Dict, Any
 from qiskit import QuantumCircuit
 from qiskit_ibm_runtime import Sampler
 
-from .gadd import GADD, TrainingConfig
+from .gadd import GADD
 from .utility_functions import create_utility_function
 
 
@@ -97,7 +97,15 @@ def run_bv_experiment(
     # Standard sequences to compare
     comparison_seqs = kwargs.pop(
         "comparison_seqs",
-        ["cpmg", "cpmg_staggered", "xy4", "xy4_staggered", "edd", "edd_staggered", "urdd"],
+        [
+            "cpmg",
+            "cpmg_staggered",
+            "xy4",
+            "xy4_staggered",
+            "edd",
+            "edd_staggered",
+            "urdd",
+        ],
     )
 
     # Train

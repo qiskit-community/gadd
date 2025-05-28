@@ -4,10 +4,6 @@ import unittest
 from qiskit.result import QuasiDistribution, Counts
 from gadd.utility_functions import (
     UtilityFactory,
-    SuccessProbability,
-    OneNormDistance,
-    GHZUtility,
-    CustomUtility,
 )
 
 

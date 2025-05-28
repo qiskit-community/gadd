@@ -1,8 +1,7 @@
 # File: gadd/utility_functions.py
 
 from abc import ABC, abstractmethod
-from typing import Dict, List, Callable, Union, Optional
-import numpy as np
+from typing import Dict, Callable, Union, Optional
 from qiskit import QuantumCircuit
 from qiskit.result import QuasiDistribution, Counts
 
@@ -204,7 +203,9 @@ class OneNormDistance(UtilityFunction):
         normalized = normalize_counts(counts)
 
         # Verify dimensions match
-        if len(next(iter(normalized.keys()))) != len(next(iter(self.ideal_distribution.keys()))):
+        if len(next(iter(normalized.keys()))) != len(
+            next(iter(self.ideal_distribution.keys()))
+        ):
             raise ValueError("Measured and ideal state dimensions don't match")
 
         # Calculate absolute differences
@@ -243,7 +244,9 @@ class CustomUtility(UtilityFunction):
     """Wrapper for custom utility functions provided by users."""
 
     def __init__(
-        self, function: Callable[[Dict[str, float]], float], name: Optional[str] = "Custom Utility"
+        self,
+        function: Callable[[Dict[str, float]], float],
+        name: Optional[str] = "Custom Utility",
     ):
         """
         Args:

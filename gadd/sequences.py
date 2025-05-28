@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from typing import List, Dict, Optional, Union
-from qiskit.circuit.library import IGate, XGate, YGate, U1Gate, RZGate, RXGate, RYGate
+from qiskit.circuit.library import IGate, XGate, YGate, U1Gate, RZGate
 from qiskit import QuantumCircuit
 import numpy as np
 
@@ -52,7 +52,20 @@ class DDSequence:
         if not all(isinstance(g, str) for g in self.gates):
             raise TypeError("All gates must be strings")
         # Validate gate names if needed
-        valid_gates = {"I", "X", "Y", "Z", "Ip", "Im", "Xp", "Xm", "Yp", "Ym", "Zp", "Zm"}
+        valid_gates = {
+            "I",
+            "X",
+            "Y",
+            "Z",
+            "Ip",
+            "Im",
+            "Xp",
+            "Xm",
+            "Yp",
+            "Ym",
+            "Zp",
+            "Zm",
+        }
         for gate in self.gates:
             if gate not in valid_gates:
                 raise ValueError(f"Invalid gate: {gate}. Must be one of {valid_gates}")
@@ -113,7 +126,9 @@ class StandardSequences:
     def get(self, name: str) -> DDSequence:
         """Get a standard sequence by name."""
         if name.lower() not in self._sequences:
-            raise ValueError(f"Unknown sequence: {name}. Available: {self.list_available()}")
+            raise ValueError(
+                f"Unknown sequence: {name}. Available: {self.list_available()}"
+            )
         return self._sequences[name.lower()].copy()
 
     def is_staggered(self, name: str) -> bool:
@@ -158,10 +173,14 @@ class DDStrategy:
             if not isinstance(seq, DDSequence):
                 raise TypeError(f"Sequence for color {color} must be a DDSequence")
             if not isinstance(color, int) or color < 0:
-                raise ValueError(f"Color index must be a non-negative integer, got {color}")
+                raise ValueError(
+                    f"Color index must be a non-negative integer, got {color}"
+                )
 
     @classmethod
-    def from_single_sequence(cls, sequence: DDSequence, n_colors: int = 1) -> "DDStrategy":
+    def from_single_sequence(
+        cls, sequence: DDSequence, n_colors: int = 1
+    ) -> "DDStrategy":
         """Create strategy by repeating single sequence for all colors."""
         if n_colors <= 0:
             raise ValueError("n_colors must be positive")
@@ -178,12 +197,16 @@ class DDStrategy:
 
     def to_dict(self) -> Dict[str, any]:
         """Convert strategy to dictionary for serialization."""
-        return {"sequences": {color: seq.gates for color, seq in self.sequences.items()}}
+        return {
+            "sequences": {color: seq.gates for color, seq in self.sequences.items()}
+        }
 
     @classmethod
     def from_dict(cls, data: Dict[str, any]) -> "DDStrategy":
         """Create strategy from dictionary."""
-        sequences = {int(color): DDSequence(gates) for color, gates in data["sequences"].items()}
+        sequences = {
+            int(color): DDSequence(gates) for color, gates in data["sequences"].items()
+        }
         return cls(sequences)
 
 

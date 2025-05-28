@@ -119,7 +119,7 @@ jobs:
         PYTHONPATH: ${{ github.workspace }}
 
     - name: Upload coverage to Coveralls (Ubuntu Python 3.9 only)
-      if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.9'
+      if: always() && matrix.os == 'ubuntu-latest' && matrix.python-version == '3.9'
       uses: coverallsapp/github-action@v2
       with:
         github-token: ${{ secrets.GITHUB_TOKEN }}

@@ -124,7 +124,9 @@ class GADD:
         if coloring is None and backend is not None:
             # Default greedy coloring of coupling map
             if hasattr(backend, "coupling_map") and backend.coupling_map:
-                self._coloring = rx.graph_greedy_color(backend.coupling_map.graph.to_undirected())
+                self._coloring = rx.graph_greedy_color(
+                    backend.coupling_map.graph.to_undirected()
+                )
             else:
                 # Fallback: all qubits same color
                 self._coloring = {i: 0 for i in range(backend.num_qubits)}
@@ -161,7 +163,9 @@ class GADD:
     @coloring.setter
     def coloring(self, coloring):
         if not isinstance(coloring, dict):
-            raise TypeError("Coloring must be a dictionary keyed by qubit index with color values")
+            raise TypeError(
+                "Coloring must be a dictionary keyed by qubit index with color values"
+            )
         self._coloring = coloring
 
     def apply_dd(
@@ -193,7 +197,9 @@ class GADD:
         if backend and hasattr(backend, "coupling_map") and backend.coupling_map:
             coloring = rx.graph_greedy_color(backend.coupling_map.graph.to_undirected())
         else:
-            coloring = self._coloring or {i: 0 for i in range(target_circuit.num_qubits)}
+            coloring = self._coloring or {
+                i: 0 for i in range(target_circuit.num_qubits)
+            }
 
         # Get instruction durations from backend if available
         instruction_durations = None
@@ -251,7 +257,9 @@ class GADD:
         # If it's a UtilityFunction instance, extract the compute method
         if hasattr(utility_function, "compute"):
             utility_func = lambda circuit, result: utility_function.compute(
-                result.quasi_dists[0] if hasattr(result, "quasi_dists") else result.get_counts()
+                result.quasi_dists[0]
+                if hasattr(result, "quasi_dists")
+                else result.get_counts()
             )
         else:
             utility_func = utility_function
@@ -274,7 +282,9 @@ class GADD:
             self._training_state.mutation_probability = self.config.mutation_probability
 
         # Training loop
-        for iteration in range(self._training_state.iteration, self.config.n_iterations):
+        for iteration in range(
+            self._training_state.iteration, self.config.n_iterations
+        ):
             print(f"GA Iteration {iteration + 1}/{self.config.n_iterations}")
 
             # Evaluate current population
@@ -310,7 +320,9 @@ class GADD:
             # Generate next population (except for last iteration)
             if iteration < self.config.n_iterations - 1:
                 # Generate offspring from current population
-                new_population = self._generate_offspring(self._training_state.population, scores)
+                new_population = self._generate_offspring(
+                    self._training_state.population, scores
+                )
 
                 # Evaluate the combined population (parents + offspring)
                 all_scores = self._evaluate_population(
@@ -318,8 +330,12 @@ class GADD:
                 )
 
                 # Select top K for next generation
-                sorted_combined = sorted(new_population, key=lambda x: all_scores[x], reverse=True)
-                self._training_state.population = sorted_combined[: self.config.pop_size]
+                sorted_combined = sorted(
+                    new_population, key=lambda x: all_scores[x], reverse=True
+                )
+                self._training_state.population = sorted_combined[
+                    : self.config.pop_size
+                ]
 
             # Update iteration counter
             self._training_state.iteration = iteration + 1
@@ -328,7 +344,9 @@ class GADD:
             if save_path:
                 self._save_checkpoint(save_path)
 
-            print(f"Best score: {best_score:.4f}, Mean: {np.mean(list(scores.values())):.4f}")
+            print(
+                f"Best score: {best_score:.4f}, Mean: {np.mean(list(scores.values())):.4f}"
+            )
 
         # Get final best sequence
         final_scores = self._evaluate_population(
@@ -501,7 +519,9 @@ class GADD:
                     (),
                     {
                         "quasi_dists": [results.quasi_dists[i]],
-                        "metadata": results.metadata[i] if hasattr(results, "metadata") else {},
+                        "metadata": (
+                            results.metadata[i] if hasattr(results, "metadata") else {}
+                        ),
                     },
                 )
             else:
@@ -510,10 +530,14 @@ class GADD:
             # Calculate utility
             scores[strategy_str] = utility_function(circuits_to_run[i], circuit_result)
 
-        print(f"  Evaluated {len(population)} strategies. Best: {max(scores.values()):.4f}")
+        print(
+            f"  Evaluated {len(population)} strategies. Best: {max(scores.values()):.4f}"
+        )
         return scores
 
-    def _generate_offspring(self, population: List[str], scores: Dict[str, float]) -> List[str]:
+    def _generate_offspring(
+        self, population: List[str], scores: Dict[str, float]
+    ) -> List[str]:
         """Generate offspring population following the paper's GA approach.
 
         1. Keep original K parents
@@ -543,7 +567,9 @@ class GADD:
         # Return combined population (K parents + 2K offspring = 3K total)
         return population + offspring
 
-    def _select_parents(self, parents: List[str], scores: Dict[str, float]) -> Tuple[str, str]:
+    def _select_parents(
+        self, parents: List[str], scores: Dict[str, float]
+    ) -> Tuple[str, str]:
         """Select two parents using fitness-proportional selection."""
         # Convert scores to probabilities
         parent_scores = [scores[p] for p in parents]
@@ -604,11 +630,13 @@ class GADD:
 
         if diversity < 0.1:  # Low diversity - increase mutation
             self._training_state.mutation_probability = min(
-                0.9, self._training_state.mutation_probability + self.config.mutation_decay
+                0.9,
+                self._training_state.mutation_probability + self.config.mutation_decay,
             )
         elif diversity > 0.8:  # High diversity - decrease mutation
             self._training_state.mutation_probability = max(
-                0.1, self._training_state.mutation_probability - self.config.mutation_decay
+                0.1,
+                self._training_state.mutation_probability - self.config.mutation_decay,
             )
 
     def _calculate_diversity(self, population: List[str]) -> float:
@@ -659,7 +687,9 @@ class GADD:
             "timestamp": datetime.now().isoformat(),
         }
 
-        filename = os.path.join(save_path, f"checkpoint_iter_{self._training_state.iteration}.json")
+        filename = os.path.join(
+            save_path, f"checkpoint_iter_{self._training_state.iteration}.json"
+        )
         with open(filename, "w") as f:
             json.dump(checkpoint, f, indent=2)
 
@@ -672,7 +702,9 @@ class GADD:
 
         return TrainingState.from_dict(checkpoint["state"])
 
-    def plot_training_progress(self, results: TrainingResult, save_path: Optional[str] = None):
+    def plot_training_progress(
+        self, results: TrainingResult, save_path: Optional[str] = None
+    ):
         """Plot training progression and comparison data."""
         fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5))
 

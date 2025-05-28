@@ -3,16 +3,12 @@
 import unittest
 import tempfile
 import os
-from unittest.mock import Mock, MagicMock, patch
+from unittest.mock import Mock
 
-import numpy as np
 from qiskit import QuantumCircuit
-
-# from qiskit.providers.fake_provider import FakeBackend
 
 from gadd import GADD, TrainingConfig, TrainingState, TrainingResult
 from gadd.sequences import DDSequence, DDStrategy
-from gadd.utility_functions import UtilityFactory
 
 
 class MockBackend:
@@ -42,14 +38,22 @@ class MockBackend:
 
         # Add single qubit gates
         for i in range(self.num_qubits):
-            target.add_instruction(XGate(), {(i,): InstructionProperties(duration=35.5e-9)})
-            target.add_instruction(SXGate(), {(i,): InstructionProperties(duration=35.5e-9)})
+            target.add_instruction(
+                XGate(), {(i,): InstructionProperties(duration=35.5e-9)}
+            )
+            target.add_instruction(
+                SXGate(), {(i,): InstructionProperties(duration=35.5e-9)}
+            )
             target.add_instruction(RZGate(0), {(i,): InstructionProperties(duration=0)})
 
         # Add two qubit gates based on coupling map
         for edge in self.coupling_map.get_edges():
-            target.add_instruction(CXGate(), {edge: InstructionProperties(duration=519e-9)})
-            target.add_instruction(CXGate(), {edge[::-1]: InstructionProperties(duration=519e-9)})
+            target.add_instruction(
+                CXGate(), {edge: InstructionProperties(duration=519e-9)}
+            )
+            target.add_instruction(
+                CXGate(), {edge[::-1]: InstructionProperties(duration=519e-9)}
+            )
 
         return target
 
@@ -112,7 +116,9 @@ class TestGADD(unittest.TestCase):
     def setUp(self):
         """Set up test fixtures."""
         self.backend = MockBackend(num_qubits=5)
-        self.config = TrainingConfig(pop_size=4, sequence_length=4, n_iterations=2, shots=1000)
+        self.config = TrainingConfig(
+            pop_size=4, sequence_length=4, n_iterations=2, shots=1000
+        )
         self.gadd = GADD(backend=self.backend, config=self.config, seed=42)
 
         # Simple test circuit
@@ -190,7 +196,9 @@ class TestGADD(unittest.TestCase):
 
         # Encode
         encoded = self.gadd._encode_strategy(sequence)
-        self.assertEqual(len(encoded), self.config.sequence_length * self.config.num_colors)
+        self.assertEqual(
+            len(encoded), self.config.sequence_length * self.config.num_colors
+        )
 
         # Decode
         decoded = self.gadd._decode_sequence(encoded)
@@ -236,7 +244,9 @@ class TestGADD(unittest.TestCase):
 
         # Check at least one position changed (except last)
         differences = sum(
-            1 for i in range(self.config.sequence_length - 1) if original[i] != mutated[i]
+            1
+            for i in range(self.config.sequence_length - 1)
+            if original[i] != mutated[i]
         )
         self.assertGreaterEqual(differences, 1)
 
@@ -299,7 +309,9 @@ class TestGADDTraining(unittest.TestCase):
     def setUp(self):
         """Set up test fixtures."""
         self.backend = MockBackend(num_qubits=3)
-        self.config = TrainingConfig(pop_size=4, sequence_length=4, n_iterations=2, shots=1000)
+        self.config = TrainingConfig(
+            pop_size=4, sequence_length=4, n_iterations=2, shots=1000
+        )
         self.gadd = GADD(backend=self.backend, config=self.config, seed=42)
 
         # Simple test circuit
@@ -377,7 +389,11 @@ class TestGADDTraining(unittest.TestCase):
             return 0.5 + (iteration_count * 0.01)
 
         strategy, result = self.gadd.train(
-            self.sampler, self.circuit, improving_utility, mode="random", save_iterations=True
+            self.sampler,
+            self.circuit,
+            improving_utility,
+            mode="random",
+            save_iterations=True,
         )
 
         # Check return types
@@ -395,7 +411,10 @@ class TestGADDTraining(unittest.TestCase):
     def test_train_with_comparison(self):
         """Test training with comparison sequences."""
         strategy, result = self.gadd.train(
-            self.sampler, self.circuit, self.utility_function, comparison_seqs=["xy4", "cpmg"]
+            self.sampler,
+            self.circuit,
+            self.utility_function,
+            comparison_seqs=["xy4", "cpmg"],
         )
 
         # Check comparison data
@@ -495,7 +514,9 @@ class TestTrainingState(unittest.TestCase):
 
     def test_serialization(self):
         """Test state serialization."""
-        state = TrainingState(population=["seq1", "seq2"], iteration=5, best_scores=[0.5, 0.6])
+        state = TrainingState(
+            population=["seq1", "seq2"], iteration=5, best_scores=[0.5, 0.6]
+        )
 
         # Serialize
         data = state.to_dict()
