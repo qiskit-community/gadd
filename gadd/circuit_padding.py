@@ -1,4 +1,3 @@
-# circuit_padding.py
 """
 Circuit padding utilities for applying dynamical decoupling sequences.
 

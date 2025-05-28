@@ -1,3 +1,7 @@
+"""
+Core GADD functionality.
+"""
+
 from typing import List, Tuple, Optional, Callable, Dict, Any, Union
 from dataclasses import dataclass, field, asdict
 from datetime import datetime

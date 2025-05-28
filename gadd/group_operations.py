@@ -44,8 +44,8 @@ DEFAULT_GROUP = {
     "names": ELEMENT_NAMES,
     "multiplication": MULTIPLICATION_TABLE,
     "inverse_map": {
-        0: 1,  # Ip^-1 = Ip
-        1: 0,  # Im^-1 = Im
+        0: 0,  # Ip^-1 = Ip
+        1: 1,  # Im^-1 = Im
         2: 3,  # Xp^-1 = Xm
         3: 2,  # Xm^-1 = Xp
         4: 5,  # Yp^-1 = Ym
@@ -144,5 +144,11 @@ def complete_sequence_to_identity(
     for element in partial_sequence:
         result = multiply(result, element, group)
 
-    # Return inverse of result
+    # We need to find an element that when multiplied with result gives Ip (0)
+    # This is not necessarily the inverse if result is already a form of identity
+    if result == 0:  # Already Ip
+        return 0
+    if result == 1:  # Result is Im
+        return 1
+    # For non-identity results, find the inverse
     return invert(result, group)

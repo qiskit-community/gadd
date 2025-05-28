@@ -1,11 +1,11 @@
 # GADD: Genetic Algorithm for Dynamical Decoupling optimization
 
 [![Python 3.9+](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
-[![Qiskit](https://img.shields.io/badge/Qiskit-2.0+-blue.svg](https://qiskit.org/)
+[![Qiskit](https://img.shields.io/badge/Qiskit-2.0+-blue.svg)](https://qiskit.org/)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Coverage Status](https://coveralls.io/repos/github/qiskit-community/gadd/badge.svg?branch=main)](https://coveralls.io/github/qiskit-community/gadd?branch=main)
 
-A Python package for empirically optimizing dynamical decoupling sequences on quantum processors using a genetic algorithm as described in the research paper ["Empirical learning of dynamical decoupling on quantum processors"](https://arxiv.org/abs/2403.02294).
+A Python package for empirically optimizing dynamical decoupling (DD) sequences on quantum processors using a genetic algorithm as described in the research paper ["Empirical learning of dynamical decoupling on quantum processors"](https://arxiv.org/abs/2403.02294).
 
 ## Installation
 
@@ -157,25 +157,27 @@ best_strategy, result = gadd.train(
 
 ```text
 gadd/
-├── README.md                 # This file
-├── pyproject.toml            # Package configuration
-├── LICENSE                   # Apache 2.0 license
+├── README.md                      # This file
+├── pyproject.toml                 # Package configuration
+├── LICENSE                        # Apache 2.0 license
+├── CITATION.bib                   # BibTeX citation file
 │
-├── gadd/                     # Main package
-│   ├── __init__.py           # Package initialization
-│   ├── gadd.py               # Main GADD algorithm implementation
-│   ├── sequences.py          # DD sequence definitions
-│   ├── library.py            # Standard DD sequence library
-│   ├── utility_functions.py  # Utility function implementations
-│   ├── group_operations.py   # Group theory operations
-│   └── circuit_padding.py    # Circuit padding utilities
+├── gadd/                          # Package directory
+│   ├── __init__.py                # Package initialization
+│   ├── gadd.py                    # Main GADD algorithm implementation
+│   ├── experiments.py             # GADD experiments from the paper
+│   ├── sequences.py               # DD sequence definitions
+│   ├── utility_functions.py       # Utility function implementations
+│   ├── group_operations.py        # Group theory operations
+│   └── circuit_padding.py         # Circuit padding utilities
 |
-└── tests/                    # Test suite
-    ├── __init__.py
-    ├── test_gadd.py          # Core algorithm tests
-    ├── test_fixtures.py      # Mock fixtures for testing
-    ├── test_group_ops.py     # Group operations tests
-    └── test_sequences.py     # DD sequence tests
+└── tests/                         # Test suite
+    ├── __init__.py                # Test initialization
+    ├── test_gadd.py               # Core algorithm tests
+    ├── test_sequences.py          # DD sequence tests
+    ├── test_utility_functions.py  # Utility function tests
+    ├── test_group_operations.py   # Group operation tests
+    └── test_circuit_padding.py    # DD sequence tests
 
 ```
 

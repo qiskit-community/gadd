@@ -1,4 +1,9 @@
-# File: gadd/utility_functions.py
+"""
+Utility function implementations.
+
+This module implements the general class for utility functions as well as common
+utility functions described in the paper.
+"""
 
 from abc import ABC, abstractmethod
 from typing import Dict, Callable, Union, Optional

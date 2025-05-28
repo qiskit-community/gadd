@@ -148,7 +148,7 @@ jobs:
 
     - name: Run safety check for known vulnerabilities
       run: |
-        safety scan --json --output safety-report.json || true
+        safety scan --output json > safety-report.json || true
         safety scan --detailed-output
 
     - name: Run bandit security linter
