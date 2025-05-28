@@ -138,7 +138,7 @@ jobs:
     - name: Set up Python
       uses: actions/setup-python@v4
       with:
-        python-version: ${{ env.PYTHON_VERSION }}
+        python-version: 3.12
 
     - name: Install dependencies
       run: |
@@ -148,8 +148,8 @@ jobs:
 
     - name: Run safety check for known vulnerabilities
       run: |
-        safety check --json --output safety-report.json || true
-        safety check
+        safety scan --json --output safety-report.json || true
+        safety scan --detailed-output
 
     - name: Run bandit security linter
       run: |
@@ -195,6 +195,11 @@ jobs:
       run: |
           cd docs
           make html SPHINXOPTS="--keep-going"
+
+    - name: Deploy documentation
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          folder: docs/_build/html/
 
   # Build and Test Package Distribution
   build:
