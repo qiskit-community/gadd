@@ -202,7 +202,7 @@ jobs:
           safety-report.json
           bandit-report.json
 
-  # Documentation Build Test
+  # Build Documentation
   docs:
     name: Documentation
     runs-on: ubuntu-latest
@@ -211,11 +211,18 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
 
     - name: Set up Python
       uses: actions/setup-python@v4
       with:
         python-version: ${{ env.PYTHON_VERSION }}
+
+    - name: Install system dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y pandoc
 
     - name: Install dependencies
       run: |
@@ -224,9 +231,8 @@ jobs:
 
     - name: Build documentation
       run: |
-        # Add documentation build commands here when sphinx is set up
-        echo "Documentation build would run here"
-        # sphinx-build -b html docs docs/_build/html -W
+          cd docs
+          make html SPHINXOPTS="-W --keep-going"
 
   # Build and Test Package Distribution
   build:

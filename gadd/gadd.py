@@ -464,55 +464,54 @@ class GADD:
 
         return DDStrategy(sequences)
 
+    def _evaluate_population(
+        self,
+        population: List[str],
+        sampler: Sampler,
+        circuit: QuantumCircuit,
+        utility_function: Callable,
+    ) -> Dict[str, float]:
+        """Evaluate fitness of all sequences in population."""
+        scores = {}
 
-def _evaluate_population(
-    self,
-    population: List[str],
-    sampler: Sampler,
-    circuit: QuantumCircuit,
-    utility_function: Callable,
-) -> Dict[str, float]:
-    """Evaluate fitness of all sequences in population."""
-    scores = {}
+        # Batch circuits for efficiency
+        circuits_to_run = []
+        strategy_map = {}
 
-    # Batch circuits for efficiency
-    circuits_to_run = []
-    strategy_map = {}
+        for i, strategy_str in enumerate(population):
+            # Create strategy object
+            dd_strategy = self._create_strategy_from_string(strategy_str)
 
-    for i, strategy_str in enumerate(population):
-        # Create strategy object
-        dd_strategy = self._create_strategy_from_string(strategy_str)
+            # Apply DD to circuit
+            padded_circuit = self.apply_dd(dd_strategy, circuit)
+            circuits_to_run.append(padded_circuit)
+            strategy_map[i] = strategy_str
 
-        # Apply DD to circuit
-        padded_circuit = self.apply_dd(dd_strategy, circuit)
-        circuits_to_run.append(padded_circuit)
-        strategy_map[i] = strategy_str
+        # Run all circuits in a single job for efficiency
+        print(f"  Evaluating {len(circuits_to_run)} circuits...", end="\r")
+        job = sampler.run(circuits_to_run, shots=self.config.shots)
+        results = job.result()
 
-    # Run all circuits in a single job for efficiency
-    print(f"  Evaluating {len(circuits_to_run)} circuits...", end="\r")
-    job = sampler.run(circuits_to_run, shots=self.config.shots)
-    results = job.result()
+        # Calculate utilities
+        for i, strategy_str in strategy_map.items():
+            # Extract result for this circuit
+            if hasattr(results, "quasi_dists"):
+                circuit_result = type(
+                    "Result",
+                    (),
+                    {
+                        "quasi_dists": [results.quasi_dists[i]],
+                        "metadata": results.metadata[i] if hasattr(results, "metadata") else {},
+                    },
+                )
+            else:
+                circuit_result = results[i]
 
-    # Calculate utilities
-    for i, strategy_str in strategy_map.items():
-        # Extract result for this circuit
-        if hasattr(results, "quasi_dists"):
-            circuit_result = type(
-                "Result",
-                (),
-                {
-                    "quasi_dists": [results.quasi_dists[i]],
-                    "metadata": results.metadata[i] if hasattr(results, "metadata") else {},
-                },
-            )
-        else:
-            circuit_result = results[i]
+            # Calculate utility
+            scores[strategy_str] = utility_function(circuits_to_run[i], circuit_result)
 
-        # Calculate utility
-        scores[strategy_str] = utility_function(circuits_to_run[i], circuit_result)
-
-    print(f"  Evaluated {len(population)} strategies. Best: {max(scores.values()):.4f}")
-    return scores
+        print(f"  Evaluated {len(population)} strategies. Best: {max(scores.values()):.4f}")
+        return scores
 
     def _generate_offspring(self, population: List[str], scores: Dict[str, float]) -> List[str]:
         """Generate offspring population following the paper's GA approach.
