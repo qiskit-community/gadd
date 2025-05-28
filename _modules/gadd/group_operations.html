@@ -278,8 +278,8 @@
     <span class="s2">&quot;names&quot;</span><span class="p">:</span> <span class="n">ELEMENT_NAMES</span><span class="p">,</span>
     <span class="s2">&quot;multiplication&quot;</span><span class="p">:</span> <span class="n">MULTIPLICATION_TABLE</span><span class="p">,</span>
     <span class="s2">&quot;inverse_map&quot;</span><span class="p">:</span> <span class="p">{</span>
-        <span class="mi">0</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>  <span class="c1"># Ip^-1 = Ip</span>
-        <span class="mi">1</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>  <span class="c1"># Im^-1 = Im</span>
+        <span class="mi">0</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>  <span class="c1"># Ip^-1 = Ip</span>
+        <span class="mi">1</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>  <span class="c1"># Im^-1 = Im</span>
         <span class="mi">2</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span>  <span class="c1"># Xp^-1 = Xm</span>
         <span class="mi">3</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span>  <span class="c1"># Xm^-1 = Xp</span>
         <span class="mi">4</span><span class="p">:</span> <span class="mi">5</span><span class="p">,</span>  <span class="c1"># Yp^-1 = Ym</span>
@@ -386,7 +386,13 @@
     <span class="k">for</span> <span class="n">element</span> <span class="ow">in</span> <span class="n">partial_sequence</span><span class="p">:</span>
         <span class="n">result</span> <span class="o">=</span> <span class="n">multiply</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">element</span><span class="p">,</span> <span class="n">group</span><span class="p">)</span>
 
-    <span class="c1"># Return inverse of result</span>
+    <span class="c1"># We need to find an element that when multiplied with result gives Ip (0)</span>
+    <span class="c1"># This is not necessarily the inverse if result is already a form of identity</span>
+    <span class="k">if</span> <span class="n">result</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>  <span class="c1"># Already Ip</span>
+        <span class="k">return</span> <span class="mi">0</span>
+    <span class="k">if</span> <span class="n">result</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>  <span class="c1"># Result is Im</span>
+        <span class="k">return</span> <span class="mi">1</span>
+    <span class="c1"># For non-identity results, find the inverse</span>
     <span class="k">return</span> <span class="n">invert</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">group</span><span class="p">)</span></div>
 
 </pre></div>
