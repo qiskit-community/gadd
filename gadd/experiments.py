@@ -7,7 +7,7 @@ from qiskit import QuantumCircuit
 from qiskit_ibm_runtime import Sampler
 
 from .gadd import GADD
-from .utility_functions import create_utility_function
+from .utility_functions import UtilityFactory
 
 
 def create_bernstein_vazirani_circuit(bitstring: str) -> QuantumCircuit:
@@ -90,9 +90,7 @@ def run_bv_experiment(
     circuit = create_bernstein_vazirani_circuit(bitstring)
 
     # Create utility function
-    utility_function = create_utility_function(
-        circuit, utility_type="success_probability", target_state=bitstring
-    )
+    utility_function = UtilityFactory.success_probability(bitstring)
 
     # Standard sequences to compare
     comparison_seqs = kwargs.pop(
@@ -144,7 +142,7 @@ def run_ghz_experiment(
     circuit = create_ghz_circuit(n_qubits)
 
     # Create utility function
-    utility_function = create_utility_function(circuit, utility_type="ghz")
+    utility_function = UtilityFactory.ghz_state(n_qubits)
 
     # Standard sequences to compare
     comparison_seqs = kwargs.pop(

@@ -149,7 +149,7 @@ def custom_fidelity(circuit, result):
 best_strategy, result = gadd.train(
     sampler=sampler,
     training_circuit=circuit,
-    utility_function=custom_fidelity
+    utility_function=UtilityFactory.custom(custom_fidelity, "Custom Fidelity")
 )
 ```
 

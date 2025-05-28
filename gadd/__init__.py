@@ -8,7 +8,6 @@ from .utility_functions import (
     OneNormDistance,
     GHZUtility,
     UtilityFactory,
-    create_utility_function,
 )
 from .experiments import (
     create_bernstein_vazirani_circuit,
@@ -32,7 +31,6 @@ __all__ = [
     "OneNormDistance",
     "GHZUtility",
     "UtilityFactory",
-    "create_utility_function",
     "create_bernstein_vazirani_circuit",
     "create_ghz_circuit",
     "run_bv_experiment",

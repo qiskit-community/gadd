@@ -181,6 +181,23 @@ class TestGroupOperations(unittest.TestCase):
                 len(inverses), 1, f"Element {i} should have exactly one inverse"
             )
 
+    def test_invert_fallback_path(self):
+        """Test invert function when using multiplication search instead of inverse map."""
+        # Create a custom group without inverse_map to force the fallback path
+        custom_group = {
+            "elements": {"e": 0, "a": 1},
+            "names": {0: "e", 1: "a"},
+            "multiplication": [
+                [0, 1],  # e * e = e, e * a = a
+                [1, 0],  # a * e = a, a * a = e
+            ],
+            # Note: no inverse_map provided
+        }
+
+        # Test that it finds inverses correctly using multiplication
+        self.assertEqual(invert(0, custom_group), 0)  # e^-1 = e
+        self.assertEqual(invert(1, custom_group), 1)  # a^-1 = a
+
     def test_invert_custom_group_no_inverse(self):
         """Test that invert raises ValueError for element without inverse in custom group."""
         # Create a custom "group" that's not actually a group (element 2 has no inverse)
@@ -198,6 +215,20 @@ class TestGroupOperations(unittest.TestCase):
         with self.assertRaises(ValueError) as context:
             invert(2, custom_group)
         self.assertIn("No inverse found for element 2", str(context.exception))
+
+    def test_complete_sequence_already_identity(self):
+        """Test complete_sequence_to_identity when sequence already multiplies to Ip."""
+        # Empty sequence is already identity, should return Ip
+        self.assertEqual(complete_sequence_to_identity([]), 0)
+
+        # Sequence that multiplies to Ip: [Xp, Xp] = Ip
+        self.assertEqual(complete_sequence_to_identity([2, 2]), 0)
+
+        # Another sequence that gives Ip: [Yp, Yp] = Ip
+        self.assertEqual(complete_sequence_to_identity([4, 4]), 0)
+
+        # Sequence that gives Im: [Xp, Xm] = Im, should return Im to get back to Ip
+        self.assertEqual(complete_sequence_to_identity([2, 3]), 1)
 
 
 if __name__ == "__main__":
