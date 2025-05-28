@@ -48,8 +48,10 @@ dev = [
 docs = [
     "sphinx>=4.0",
     "qiskit-sphinx-theme",
+    "myst-parser[linkify]",
     "nbsphinx",
     "jupyter",
+    "sphinx-copybutton",
 ]
 
 [project.urls]

@@ -1,11 +1,22 @@
 # GADD: Genetic Algorithm for Dynamical Decoupling optimization
 
+<!-- START_DOCS_INCLUDE -->
+
 [![Python 3.9+](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
 [![Qiskit](https://img.shields.io/badge/Qiskit-2.0+-blue.svg)](https://qiskit.org/)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Coverage Status](https://coveralls.io/repos/github/qiskit-community/gadd/badge.svg?branch=main)](https://coveralls.io/github/qiskit-community/gadd?branch=main)
 
-A Python package for empirically optimizing dynamical decoupling (DD) sequences on quantum processors using a genetic algorithm as described in the research paper ["Empirical learning of dynamical decoupling on quantum processors"](https://arxiv.org/abs/2403.02294).
+**GADD** is a Python package for empirically optimizing dynamical decoupling (DD) sequences on quantum processors using a genetic algorithm as described in the research paper ["Empirical learning of dynamical decoupling on quantum processors"](https://arxiv.org/abs/2403.02294).
+
+## Key Features
+
+- **Empirical Optimization**: Learn DD sequences directly from quantum hardware feedback
+- **Hardware Agnostic**: Works with any quantum backend that supports Qiskit
+- **Genetic Algorithm**: Efficient search through large DD sequence spaces
+- **Multiple Utility Functions**: Built-in metrics for various quantum applications
+- **Comparative Analysis**: Benchmark against standard DD sequences (XY4, CPMG, EDD, URDD)
+- **Comprehensive Results**: Detailed training progression and performance analytics
 
 ## Installation
 
@@ -180,6 +191,8 @@ gadd/
     └── test_circuit_padding.py    # DD sequence tests
 
 ```
+
+<!-- END_DOCS_INCLUDE -->
 
 ## Citation
 

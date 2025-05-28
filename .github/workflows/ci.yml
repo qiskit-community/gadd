@@ -9,6 +9,10 @@ on:
     # Run tests weekly on Sundays at 2 AM UTC
     - cron: '0 2 * * 0'
 
+concurrency:
+  group: ${{ github.repository }}-${{ github.ref }}-${{ github.head_ref }}
+  cancel-in-progress: true
+
 jobs:
   # Code Quality Checks
   quality:
@@ -200,6 +204,15 @@ jobs:
       uses: JamesIves/github-pages-deploy-action@v4
       with:
         folder: docs/_build/html/
+    
+    - name: Compress artifacts
+      run: |
+        tar -Jcvf docs-build.tar.xz docs/_build/html
+
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: docs-build
 
   # Build and Test Package Distribution
   build:
