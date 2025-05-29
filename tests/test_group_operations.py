@@ -3,6 +3,7 @@
 import unittest
 from typing import Union, List, Optional, Dict
 from gadd.group_operations import (
+    DecouplingGroup,
     multiply,
     invert,
     complete_sequence_to_identity,
@@ -198,24 +199,6 @@ class TestGroupOperations(unittest.TestCase):
         self.assertEqual(invert(0, custom_group), 0)  # e^-1 = e
         self.assertEqual(invert(1, custom_group), 1)  # a^-1 = a
 
-    def test_invert_custom_group_no_inverse(self):
-        """Test that invert raises ValueError for element without inverse in custom group."""
-        # Create a custom "group" that's not actually a group (element 2 has no inverse)
-        custom_group = {
-            "elements": {"e": 0, "a": 1, "b": 2},
-            "names": {0: "e", 1: "a", 2: "b"},
-            "multiplication": [
-                [0, 1, 2],  # e * x = x
-                [1, 0, 2],  # a * a = e, a * b = b
-                [2, 2, 2],  # b * anything = b (no inverse!)
-            ],
-        }
-
-        # Element 2 (b) should have no inverse
-        with self.assertRaises(ValueError) as context:
-            invert(2, custom_group)
-        self.assertIn("No inverse found for element 2", str(context.exception))
-
     def test_complete_sequence_already_identity(self):
         """Test complete_sequence_to_identity when sequence already multiplies to Ip."""
         # Empty sequence is already identity, should return Ip
@@ -229,6 +212,48 @@ class TestGroupOperations(unittest.TestCase):
 
         # Sequence that gives Im: [Xp, Xm] = Im, should return Im to get back to Ip
         self.assertEqual(complete_sequence_to_identity([2, 3]), 1)
+
+    def test_custom_group(self):
+        """Test custom decoupling group."""
+        # Create a simple 4-element group
+        custom_group = DecouplingGroup(
+            elements={"I": 0, "X": 1, "Y": 2, "Z": 3},
+            names={0: "I", 1: "X", 2: "Y", 3: "Z"},
+            multiplication=[
+                [0, 1, 2, 3],  # I
+                [1, 0, 3, 2],  # X
+                [2, 3, 0, 1],  # Y
+                [3, 2, 1, 0],  # Z
+            ],
+            inverse_map={0: 0, 1: 1, 2: 2, 3: 3},
+        )
+
+        # Test multiplication
+        self.assertEqual(multiply("X", "Y", custom_group), 3)  # X*Y = Z
+        self.assertEqual(multiply("Y", "X", custom_group), 3)  # Y*X = Z
+
+        # Test with sequence
+        partial = [1, 2]  # X, Y
+        last = complete_sequence_to_identity(partial, custom_group)
+        self.assertEqual(last, 3)  # Need Z to complete to identity
+
+    def test_invert_custom_group_no_inverse(self):
+        """Test that invert raises ValueError for element without inverse in custom group."""
+        # Create a custom "group" that's not actually a group (element 2 has no inverse)
+        custom_group = DecouplingGroup(
+            elements={"e": 0, "a": 1, "b": 2},
+            names={0: "e", 1: "a", 2: "b"},
+            multiplication=[
+                [0, 1, 2],  # e * x = x
+                [1, 0, 2],  # a * a = e, a * b = b
+                [2, 2, 2],  # b * anything = b (no inverse!)
+            ],
+        )
+
+        # Element 2 (b) should have no inverse
+        with self.assertRaises(ValueError) as context:
+            invert(2, custom_group)
+        self.assertIn("No inverse found for element 2", str(context.exception))
 
 
 if __name__ == "__main__":

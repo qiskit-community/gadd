@@ -1,8 +1,35 @@
 """
-Group operations for the decoupling group.
+Decoupling groups and group operations.
 """
 
 from typing import Union, List, Optional, Dict
+from dataclasses import dataclass
+
+
+@dataclass
+class DecouplingGroup:
+    """Definition of a decoupling group for DD sequences."""
+
+    elements: Dict[str, int]
+    names: Dict[int, str]
+    multiplication: List[List[int]]
+    inverse_map: Optional[Dict[int, int]]
+
+    @property
+    def size(self) -> int:
+        """Size of the group."""
+        return len(self.elements)
+
+    def element_name(self, index: int) -> str:
+        """Get element name from index."""
+        return self.names.get(index, f"g{index}")
+
+    def element_index(self, name: str) -> int:
+        """Get element index from name."""
+        if name in self.elements:
+            return self.elements[name]
+        raise ValueError(f"Unknown element name: {name}")
+
 
 # The default group group G = {Ip, Im, Xp, Xm, Yp, Ym, Zp, Zm} of
 # the single-qubit Pauli operations and their inverses as defined
@@ -39,11 +66,11 @@ MULTIPLICATION_TABLE = [
 ]
 
 # Default group structure
-DEFAULT_GROUP = {
-    "elements": GROUP_ELEMENTS,
-    "names": ELEMENT_NAMES,
-    "multiplication": MULTIPLICATION_TABLE,
-    "inverse_map": {
+DEFAULT_GROUP = DecouplingGroup(
+    elements=GROUP_ELEMENTS,
+    names=ELEMENT_NAMES,
+    multiplication=MULTIPLICATION_TABLE,
+    inverse_map={
         0: 0,  # Ip^-1 = Ip
         1: 1,  # Im^-1 = Im
         2: 3,  # Xp^-1 = Xm
@@ -53,11 +80,11 @@ DEFAULT_GROUP = {
         6: 7,  # Zp^-1 = Zm
         7: 6,  # Zm^-1 = Zp
     },
-}
+)
 
 
 def multiply(
-    p1: Union[int, str], p2: Union[int, str], group: Optional[Dict] = None
+    p1: Union[int, str], p2: Union[int, str], group: Optional[DecouplingGroup] = None
 ) -> int:
     """
     Multiply two group elements.
@@ -76,17 +103,16 @@ def multiply(
         group = DEFAULT_GROUP
 
     # Convert string names to indices
-    elements = group["elements"]
     if isinstance(p1, str):
-        p1 = elements.get(p1, p1)
+        p1 = group.element_index(p1)
     if isinstance(p2, str):
-        p2 = elements.get(p2, p2)
+        p2 = group.element_index(p2)
 
     # Use multiplication table
-    return group["multiplication"][p1][p2]
+    return group.multiplication[p1][p2]
 
 
-def invert(a: Union[int, str], group: Optional[Dict] = None) -> int:
+def invert(a: Union[int, str], group: Optional[DecouplingGroup] = None) -> int:
     """
     Find the inverse of a group element.
 
@@ -103,17 +129,15 @@ def invert(a: Union[int, str], group: Optional[Dict] = None) -> int:
         group = DEFAULT_GROUP
 
     # Convert string to index
-    elements = group["elements"]
     if isinstance(a, str):
-        a = elements.get(a, a)
+        a = group.element_index(a)
 
-    # Check if group has inverse map
-    if "inverse_map" in group:
-        return group["inverse_map"][a]
+    # Use inverse map
+    if a in group.inverse_map:
+        return group.inverse_map[a]
 
-    # Otherwise search for inverse
-    group_size = len(group["elements"])
-    for b in range(group_size):
+    # Otherwise search for inverse (shouldn't happen for valid groups)
+    for b in range(group.size):
         if multiply(a, b, group) == 0:
             return b
 
@@ -121,7 +145,7 @@ def invert(a: Union[int, str], group: Optional[Dict] = None) -> int:
 
 
 def complete_sequence_to_identity(
-    partial_sequence: List[Union[int, str]], group: Optional[Dict] = None
+    partial_sequence: List[Union[int, str]], group: Optional[DecouplingGroup] = None
 ) -> int:
     """
     Find the element needed to complete a sequence to multiply to identity.
@@ -144,11 +168,5 @@ def complete_sequence_to_identity(
     for element in partial_sequence:
         result = multiply(result, element, group)
 
-    # We need to find an element that when multiplied with result gives Ip (0)
-    # This is not necessarily the inverse if result is already a form of identity
-    if result == 0:  # Already Ip
-        return 0
-    if result == 1:  # Result is Im
-        return 1
-    # For non-identity results, find the inverse
+    # Return inverse of result
     return invert(result, group)

@@ -1,4 +1,4 @@
-"""Integration tests for GADD."""
+"""Integration tests."""
 
 import unittest, os
 from unittest.mock import patch
@@ -307,6 +307,46 @@ class TestIntegration(unittest.TestCase):
         with tempfile.NamedTemporaryFile(suffix=".png") as tmp:
             gadd.plot_training_progress(result, save_path=tmp.name)
             self.assertTrue(os.path.exists(tmp.name))
+
+    def test_custom_decoupling_group(self):
+        """Test GADD with custom decoupling group."""
+        from gadd.group_operations import DecouplingGroup
+
+        # Create simple 4-element group
+        custom_group = DecouplingGroup(
+            elements={"I": 0, "X": 1, "Y": 2, "Z": 3},
+            names={0: "I", 1: "X", 2: "Y", 3: "Z"},
+            multiplication=[
+                [0, 1, 2, 3],
+                [1, 0, 3, 2],
+                [2, 3, 0, 1],
+                [3, 2, 1, 0],
+            ],
+            inverse_map={0: 0, 1: 1, 2: 2, 3: 3},
+        )
+
+        config = TrainingConfig(
+            pop_size=4, n_iterations=2, decoupling_group=custom_group, sequence_length=4
+        )
+
+        gadd = GADD(backend=self.backend, config=config)
+
+        circuit = QuantumCircuit(2)
+        circuit.h(0)
+        circuit.cx(0, 1)
+
+        utility_function = UtilityFactory.success_probability("00")
+
+        best_strategy, result = gadd.train(
+            sampler=self.sampler,
+            training_circuit=circuit,
+            utility_function=utility_function,
+        )
+
+        # Check that sequences use the custom group
+        gates = gadd._decode_sequence(result.final_population[0])
+        for gate in gates:
+            self.assertIn(gate, ["I", "X", "Y", "Z"])
 
 
 if __name__ == "__main__":

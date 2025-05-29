@@ -92,20 +92,29 @@ class DDSequence:
         """Create a deep copy of the sequence."""
         return DDSequence(self.gates.copy())
 
-    def to_indices(self) -> List[int]:
-        """Convert gate names to group element indices."""
-        from .group_operations import GROUP_ELEMENTS
+    def to_indices(self, group: Optional["DecouplingGroup"] = None) -> List[int]:
+        """Convert gate names to group element indices.
 
-        # Map simplified names to full names
-        name_map = {"I": "Ip", "X": "Xp", "Y": "Yp", "Z": "Zp"}
+        Args:
+            group: Optional custom decoupling group. Uses default if not provided.
+
+        Returns:
+            List of integer indices corresponding to group elements.
+        """
+        from .group_operations import DEFAULT_GROUP
+
+        if group is None:
+            group = DEFAULT_GROUP
 
         indices = []
         for gate in self.gates:
-            full_name = name_map.get(gate, gate)
-            if full_name in GROUP_ELEMENTS:
-                indices.append(GROUP_ELEMENTS[full_name])
-            else:
-                raise ValueError(f"Unknown gate: {gate}")
+            try:
+                indices.append(group.element_index(gate))
+            except ValueError:
+                # Handle simplified names
+                name_map = {"I": "Ip", "X": "Xp", "Y": "Yp", "Z": "Zp"}
+                full_name = name_map.get(gate, gate)
+                indices.append(group.element_index(full_name))
         return indices
 
 

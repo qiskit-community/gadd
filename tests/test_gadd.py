@@ -8,7 +8,7 @@ from qiskit import QuantumCircuit
 
 from gadd import GADD, TrainingConfig, TrainingState, TrainingResult
 from gadd.strategies import DDSequence, DDStrategy, ColorAssignment
-from gadd.group_operations import verify_sequence_identity
+from .test_group_operations import verify_sequence_identity
 
 from .fixtures import MockBackend, MockSampler
 
@@ -85,7 +85,7 @@ class TestGADD(unittest.TestCase):
 
         # Check all elements are valid
         for elem in sequence:
-            self.assertIn(elem, range(self.config.group_size))
+            self.assertIn(elem, range(self.config.decoupling_group.size))
 
         self.assertTrue(verify_sequence_identity(sequence))
 

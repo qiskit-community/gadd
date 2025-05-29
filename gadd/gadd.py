@@ -19,7 +19,11 @@ from qiskit_ibm_runtime import Sampler
 import matplotlib.pyplot as plt
 
 from .strategies import DDStrategy, DDSequence, StandardSequences, ColorAssignment
-from .group_operations import complete_sequence_to_identity
+from .group_operations import (
+    complete_sequence_to_identity,
+    DecouplingGroup,
+    DEFAULT_GROUP,
+)
 from .circuit_padding import apply_dd_strategy as _apply_dd_strategy
 from .utility_functions import UtilityFunction, SuccessProbability
 
@@ -31,36 +35,65 @@ class TrainingConfig:
     Args:
         pop_size (int): Size of the population (``K`` in the paper).
         sequence_length (int): Length of each DD sequence (``L`` in the paper).
-        parent_fraction (float): Fraction of population to use as parents for reproduction.
+        parent_fraction (float): Fraction of population to use as parents for
+            reproduction. Default is 0.25 from the paper.
         n_iterations (int): Number of GA iterations to run.
         mutation_probability (float): Initial probability of mutation.
         optimization_level (int): Qiskit transpilation optimization level.
         shots (int): Number of shots for quantum circuit execution.
-        num_colors (int): Number of distinct sequences per strategy (``k`` in the paper).
-        group_size (int): Size of the decoupling group (``|G|`` in the paper).
-        mode (str): Mode for generating initial population.
+        num_colors (int): Number of distinct sequences per strategy (``k`` in the
+            paper).
+        decoupling_group (DecouplingGroup): The decoupling group to use.
+            Default is ``G`` from the paper.
+        mode (str): Mode for generating initial population. Can be either ``uniform``
+            or ``random``.
         dynamic_mutation (bool): Whether to dynamically adjust mutation probability.
         mutation_decay (float): Factor to adjust mutation probability.
     """
 
     pop_size: int = 16
     sequence_length: int = 8
-    parent_fraction: float = 0.25  # Fraction of K to use as parents
+    parent_fraction: float = 0.25
     n_iterations: int = 20
     mutation_probability: float = 0.75
     optimization_level: int = 1
     shots: int = 4000
     num_colors: int = 3
-    group_size: int = 8
-    mode: str = "random"
+    decoupling_group: DecouplingGroup = field(default_factory=lambda: DEFAULT_GROUP)
+    mode: str = "uniform"
     dynamic_mutation: bool = True
     mutation_decay: float = 0.1
 
     def to_dict(self) -> Dict[str, Any]:
-        return asdict(self)
+        """Serializes training configuration to a dictionary.
+
+        Returns:
+            Dict[str, Any]: The serialized output.
+        """
+        data = asdict(self)
+        # Convert DecouplingGroup to dict for serialization
+        data["decoupling_group"] = {
+            "elements": self.decoupling_group.elements,
+            "names": self.decoupling_group.names,
+            "multiplication": self.decoupling_group.multiplication,
+            "inverse_map": self.decoupling_group.inverse_map,
+        }
+        return data
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> "TrainingConfig":
+        """Deserializes a dictionary object to a ``TrainingConfig`` object.
+
+        Args:
+            data (Dict[str, Any]): The serialized input.
+
+        Returns:
+            TrainingConfig: The deserialized output.
+        """
+        # Convert decoupling_group dict back to DecouplingGroup
+        if "decoupling_group" in data and isinstance(data["decoupling_group"], dict):
+            group_data = data["decoupling_group"]
+            data["decoupling_group"] = DecouplingGroup(**group_data)
         return cls(**data)
 
 
@@ -128,7 +161,6 @@ class GADD:
             self._coloring = ColorAssignment(backend=backend)
         elif isinstance(coloring, dict):
             # Convert dict to ColorAssignment
-            # Assume dict is qubit->color mapping
             color_to_qubits = {}
             for qubit, color in coloring.items():
                 if color not in color_to_qubits:
@@ -139,9 +171,6 @@ class GADD:
             self._coloring = coloring
         else:
             self._coloring = None
-
-        # Decoupling group - matches paper's group G
-        self._decoupling_group = ["Ip", "Im", "Xp", "Xm", "Yp", "Ym", "Zp", "Zm"]
 
         # Training state for resume capability
         self._training_state = None
@@ -406,7 +435,7 @@ class GADD:
     def _initialize_uniform_population(self) -> List[str]:
         """Initialize uniform population as described in the paper."""
         population = []
-        group_size = len(self._decoupling_group)
+        group_size = self.config.decoupling_group.size
 
         # Calculate repetitions per element
         reps_per_element = self.config.pop_size // group_size
@@ -430,7 +459,9 @@ class GADD:
             sequence = pattern.copy()
 
             # Calculate last element to make sequence multiply to identity
-            last_element = complete_sequence_to_identity(sequence)
+            last_element = complete_sequence_to_identity(
+                sequence, self.config.decoupling_group
+            )
             sequence.append(last_element)
 
             # Create strategy for all colors
@@ -460,10 +491,12 @@ class GADD:
         """Generate a random DD sequence that multiplies to identity."""
         sequence = []
         for _ in range(self.config.sequence_length - 1):
-            sequence.append(self._rng.integers(0, self.config.group_size))
+            sequence.append(self._rng.integers(0, self.config.decoupling_group.size))
 
         # Calculate last element to ensure multiplication to identity
-        last_element = complete_sequence_to_identity(sequence)
+        last_element = complete_sequence_to_identity(
+            sequence, self.config.decoupling_group
+        )
         sequence.append(last_element)
 
         return sequence
@@ -484,7 +517,7 @@ class GADD:
 
         gates = []
         for char in first_sequence:
-            gates.append(self._decoupling_group[int(char)])
+            gates.append(self.config.decoupling_group.element_name(int(char)))
 
         return gates
 
@@ -618,7 +651,9 @@ class GADD:
 
         # Calculate last element to maintain group constraint
         child_indices = [int(c) for c in child_seq]
-        last_element = complete_sequence_to_identity(child_indices)
+        last_element = complete_sequence_to_identity(
+            child_indices, self.config.decoupling_group
+        )
         child_seq += str(last_element)
 
         # Replicate for all colors
@@ -632,11 +667,13 @@ class GADD:
         # Mutate random position (except last)
         if len(seq) > 1:
             idx = self._rng.integers(0, len(seq) - 1)
-            seq[idx] = str(self._rng.integers(0, self.config.group_size))
+            seq[idx] = str(self._rng.integers(0, self.config.decoupling_group.size))
 
             # Recalculate last element
             seq_indices = [int(c) for c in seq[:-1]]
-            last_element = complete_sequence_to_identity(seq_indices)
+            last_element = complete_sequence_to_identity(
+                seq_indices, self.config.decoupling_group
+            )
             seq[-1] = str(last_element)
 
         # Replicate for all colors
