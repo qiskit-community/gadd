@@ -1,5 +1,5 @@
 """
-Mock backend and sampler for testing.
+Mock fixtures for testing.
 """
 
 from unittest.mock import Mock

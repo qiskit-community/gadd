@@ -9,7 +9,7 @@ from gadd import GADD, TrainingConfig, TrainingResult
 from gadd.strategies import DDStrategy, ColorAssignment, DDSequence
 from gadd.utility_functions import UtilityFactory
 
-from .test_fixtures import MockBackend, MockSampler
+from .fixtures import MockBackend, MockSampler
 
 
 class TestIntegration(unittest.TestCase):

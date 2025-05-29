@@ -4,7 +4,7 @@ import unittest
 from gadd.strategies import DDSequence, StandardSequences, ColorAssignment, DDStrategy
 import rustworkx as rx
 from qiskit import QuantumCircuit
-from .test_fixtures import MockBackend
+from .fixtures import MockBackend
 
 
 class TestDDSequence(unittest.TestCase):

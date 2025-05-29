@@ -10,7 +10,7 @@ from gadd import GADD, TrainingConfig, TrainingState, TrainingResult
 from gadd.strategies import DDSequence, DDStrategy, ColorAssignment
 from gadd.group_operations import verify_sequence_identity
 
-from .test_fixtures import MockBackend, MockSampler
+from .fixtures import MockBackend, MockSampler
 
 
 class TestGADD(unittest.TestCase):

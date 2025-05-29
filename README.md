@@ -177,18 +177,20 @@ gadd/
 │   ├── __init__.py                # Package initialization
 │   ├── gadd.py                    # Main GADD algorithm implementation
 │   ├── experiments.py             # GADD experiments from the paper
-│   ├── sequences.py               # DD sequence definitions
+│   ├── strategies.py              # DD strategy definitions
 │   ├── utility_functions.py       # Utility function implementations
 │   ├── group_operations.py        # Group theory operations
 │   └── circuit_padding.py         # Circuit padding utilities
 |
-└── tests/                         # Test suite
+└── tests/                         # Test suite directory
     ├── __init__.py                # Test initialization
     ├── test_gadd.py               # Core algorithm tests
     ├── test_sequences.py          # DD sequence tests
     ├── test_utility_functions.py  # Utility function tests
     ├── test_group_operations.py   # Group operation tests
-    └── test_circuit_padding.py    # DD sequence tests
+    ├── test_circuit_padding.py    # Test circuit padding
+    ├── test_integration.py        # Integration tests
+    └── fixtures.py                # Mock fixtures for testing
 
 ```
 
