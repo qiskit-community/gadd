@@ -199,11 +199,6 @@ jobs:
       run: |
           cd docs
           make html SPHINXOPTS="--keep-going"
-
-    - name: Deploy documentation
-      uses: JamesIves/github-pages-deploy-action@v4
-      with:
-        folder: docs/_build/html/
     
     - name: Compress artifacts
       run: |
