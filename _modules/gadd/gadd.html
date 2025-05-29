@@ -9,6 +9,7 @@
       <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?v=354aac6f" />
     <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=a746c00c" />
     <link rel="stylesheet" type="text/css" href="../../_static/styles/qiskit-sphinx-theme.css?v=8ff9dcb6" />
+    <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="../../_static/styles/furo-extensions.css?v=302659d7" />
     <link rel="stylesheet" type="text/css" href="../../_static/custom.css" />
     
@@ -243,8 +244,6 @@
 <span class="kn">import</span> <span class="nn">time</span>
 <span class="kn">import</span> <span class="nn">os</span>
 
-<span class="kn">import</span> <span class="nn">rustworkx</span> <span class="k">as</span> <span class="nn">rx</span>
-
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">from</span> <span class="nn">numpy.random</span> <span class="kn">import</span> <span class="n">BitGenerator</span><span class="p">,</span> <span class="n">Generator</span><span class="p">,</span> <span class="n">SeedSequence</span><span class="p">,</span> <span class="n">default_rng</span>
 
@@ -254,7 +253,7 @@
 <span class="kn">from</span> <span class="nn">qiskit_ibm_runtime</span> <span class="kn">import</span> <span class="n">Sampler</span>
 <span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
 
-<span class="kn">from</span> <span class="nn">.sequences</span> <span class="kn">import</span> <span class="n">DDStrategy</span><span class="p">,</span> <span class="n">DDSequence</span><span class="p">,</span> <span class="n">StandardSequences</span>
+<span class="kn">from</span> <span class="nn">.strategies</span> <span class="kn">import</span> <span class="n">DDStrategy</span><span class="p">,</span> <span class="n">DDSequence</span><span class="p">,</span> <span class="n">StandardSequences</span><span class="p">,</span> <span class="n">ColorAssignment</span>
 <span class="kn">from</span> <span class="nn">.group_operations</span> <span class="kn">import</span> <span class="n">complete_sequence_to_identity</span>
 <span class="kn">from</span> <span class="nn">.circuit_padding</span> <span class="kn">import</span> <span class="n">apply_dd_strategy</span> <span class="k">as</span> <span class="n">_apply_dd_strategy</span>
 <span class="kn">from</span> <span class="nn">.utility_functions</span> <span class="kn">import</span> <span class="n">UtilityFunction</span><span class="p">,</span> <span class="n">SuccessProbability</span>
@@ -274,7 +273,7 @@
 <span class="sd">        mutation_probability (float): Initial probability of mutation.</span>
 <span class="sd">        optimization_level (int): Qiskit transpilation optimization level.</span>
 <span class="sd">        shots (int): Number of shots for quantum circuit execution.</span>
-<span class="sd">        num_colors (int): Number of distinct sequences per strategy (``C`` in the paper).</span>
+<span class="sd">        num_colors (int): Number of distinct sequences per strategy (``k`` in the paper).</span>
 <span class="sd">        group_size (int): Size of the decoupling group (``|G|`` in the paper).</span>
 <span class="sd">        mode (str): Mode for generating initial population.</span>
 <span class="sd">        dynamic_mutation (bool): Whether to dynamically adjust mutation probability.</span>
@@ -374,7 +373,7 @@
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">backend</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Backend</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">utility_function</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">UtilityFunction</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">coloring</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">coloring</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">Dict</span><span class="p">,</span> <span class="n">ColorAssignment</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">seed</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">SeedSequence</span><span class="p">,</span> <span class="n">BitGenerator</span><span class="p">,</span> <span class="n">Generator</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">config</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">TrainingConfig</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">):</span>
@@ -388,16 +387,21 @@
 
         <span class="c1"># Set up coloring</span>
         <span class="k">if</span> <span class="n">coloring</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">backend</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="c1"># Default greedy coloring of coupling map</span>
-            <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">backend</span><span class="p">,</span> <span class="s2">&quot;coupling_map&quot;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">backend</span><span class="o">.</span><span class="n">coupling_map</span><span class="p">:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_coloring</span> <span class="o">=</span> <span class="n">rx</span><span class="o">.</span><span class="n">graph_greedy_color</span><span class="p">(</span>
-                    <span class="n">backend</span><span class="o">.</span><span class="n">coupling_map</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">to_undirected</span><span class="p">()</span>
-                <span class="p">)</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="c1"># Fallback: all qubits same color</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_coloring</span> <span class="o">=</span> <span class="p">{</span><span class="n">i</span><span class="p">:</span> <span class="mi">0</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">backend</span><span class="o">.</span><span class="n">num_qubits</span><span class="p">)}</span>
+            <span class="c1"># Default coloring from backend</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_coloring</span> <span class="o">=</span> <span class="n">ColorAssignment</span><span class="p">(</span><span class="n">backend</span><span class="o">=</span><span class="n">backend</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">coloring</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+            <span class="c1"># Convert dict to ColorAssignment</span>
+            <span class="c1"># Assume dict is qubit-&gt;color mapping</span>
+            <span class="n">color_to_qubits</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="k">for</span> <span class="n">qubit</span><span class="p">,</span> <span class="n">color</span> <span class="ow">in</span> <span class="n">coloring</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="k">if</span> <span class="n">color</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">color_to_qubits</span><span class="p">:</span>
+                    <span class="n">color_to_qubits</span><span class="p">[</span><span class="n">color</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+                <span class="n">color_to_qubits</span><span class="p">[</span><span class="n">color</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">qubit</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_coloring</span> <span class="o">=</span> <span class="n">ColorAssignment</span><span class="o">.</span><span class="n">from_manual_assignment</span><span class="p">(</span><span class="n">color_to_qubits</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">coloring</span><span class="p">,</span> <span class="n">ColorAssignment</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_coloring</span> <span class="o">=</span> <span class="n">coloring</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_coloring</span> <span class="o">=</span> <span class="n">coloring</span> <span class="ow">or</span> <span class="p">{}</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_coloring</span> <span class="o">=</span> <span class="kc">None</span>
 
         <span class="c1"># Decoupling group - matches paper&#39;s group G</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_decoupling_group</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;Ip&quot;</span><span class="p">,</span> <span class="s2">&quot;Im&quot;</span><span class="p">,</span> <span class="s2">&quot;Xp&quot;</span><span class="p">,</span> <span class="s2">&quot;Xm&quot;</span><span class="p">,</span> <span class="s2">&quot;Yp&quot;</span><span class="p">,</span> <span class="s2">&quot;Ym&quot;</span><span class="p">,</span> <span class="s2">&quot;Zp&quot;</span><span class="p">,</span> <span class="s2">&quot;Zm&quot;</span><span class="p">]</span>
@@ -429,11 +433,22 @@
 
     <span class="nd">@coloring</span><span class="o">.</span><span class="n">setter</span>
     <span class="k">def</span> <span class="nf">coloring</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">coloring</span><span class="p">):</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">coloring</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">coloring</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+            <span class="c1"># Convert dict to ColorAssignment</span>
+            <span class="n">color_to_qubits</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="k">for</span> <span class="n">qubit</span><span class="p">,</span> <span class="n">color</span> <span class="ow">in</span> <span class="n">coloring</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="k">if</span> <span class="n">color</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">color_to_qubits</span><span class="p">:</span>
+                    <span class="n">color_to_qubits</span><span class="p">[</span><span class="n">color</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+                <span class="n">color_to_qubits</span><span class="p">[</span><span class="n">color</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">qubit</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_coloring</span> <span class="o">=</span> <span class="n">ColorAssignment</span><span class="o">.</span><span class="n">from_manual_assignment</span><span class="p">(</span><span class="n">color_to_qubits</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">coloring</span><span class="p">,</span> <span class="n">ColorAssignment</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_coloring</span> <span class="o">=</span> <span class="n">coloring</span>
+        <span class="k">elif</span> <span class="n">coloring</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_coloring</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">else</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
-                <span class="s2">&quot;Coloring must be a dictionary keyed by qubit index with color values&quot;</span>
+                <span class="s2">&quot;Coloring must be a dictionary, ColorAssignment instance, or None&quot;</span>
             <span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_coloring</span> <span class="o">=</span> <span class="n">coloring</span>
 
 <div class="viewcode-block" id="GADD.apply_dd">
 <a class="viewcode-back" href="../../api/gadd.html#gadd.gadd.GADD.apply_dd">[docs]</a>
@@ -462,13 +477,15 @@
         <span class="c1"># Use provided backend or fall back to instance backend</span>
         <span class="n">backend</span> <span class="o">=</span> <span class="n">backend</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">_backend</span>
 
-        <span class="c1"># Get coloring for the backend</span>
-        <span class="k">if</span> <span class="n">backend</span> <span class="ow">and</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">backend</span><span class="p">,</span> <span class="s2">&quot;coupling_map&quot;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">backend</span><span class="o">.</span><span class="n">coupling_map</span><span class="p">:</span>
-            <span class="n">coloring</span> <span class="o">=</span> <span class="n">rx</span><span class="o">.</span><span class="n">graph_greedy_color</span><span class="p">(</span><span class="n">backend</span><span class="o">.</span><span class="n">coupling_map</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">to_undirected</span><span class="p">())</span>
+        <span class="c1"># Get coloring for the circuit</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_coloring</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">coloring_dict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_coloring</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="n">backend</span><span class="p">:</span>
+            <span class="n">color_assignment</span> <span class="o">=</span> <span class="n">ColorAssignment</span><span class="p">(</span><span class="n">backend</span><span class="o">=</span><span class="n">backend</span><span class="p">)</span>
+            <span class="n">coloring_dict</span> <span class="o">=</span> <span class="n">color_assignment</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">coloring</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_coloring</span> <span class="ow">or</span> <span class="p">{</span>
-                <span class="n">i</span><span class="p">:</span> <span class="mi">0</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">target_circuit</span><span class="o">.</span><span class="n">num_qubits</span><span class="p">)</span>
-            <span class="p">}</span>
+            <span class="c1"># Fallback: all qubits same color</span>
+            <span class="n">coloring_dict</span> <span class="o">=</span> <span class="p">{</span><span class="n">i</span><span class="p">:</span> <span class="mi">0</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">target_circuit</span><span class="o">.</span><span class="n">num_qubits</span><span class="p">)}</span>
 
         <span class="c1"># Get instruction durations from backend if available</span>
         <span class="n">instruction_durations</span> <span class="o">=</span> <span class="kc">None</span>
@@ -482,7 +499,7 @@
         <span class="k">return</span> <span class="n">_apply_dd_strategy</span><span class="p">(</span>
             <span class="n">target_circuit</span><span class="p">,</span>
             <span class="n">strategy</span><span class="p">,</span>
-            <span class="n">coloring</span><span class="p">,</span>
+            <span class="n">coloring_dict</span><span class="p">,</span>
             <span class="n">instruction_durations</span><span class="o">=</span><span class="n">instruction_durations</span><span class="p">,</span>
             <span class="n">staggered</span><span class="o">=</span><span class="n">staggered</span><span class="p">,</span>
         <span class="p">)</span></div>
@@ -1131,6 +1148,8 @@
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/furo.js?v=5fa4622c"></script>
+    <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../../_static/copybutton.js?v=f281be69"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     </body>
 </html>

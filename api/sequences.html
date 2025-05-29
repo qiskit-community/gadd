@@ -10,6 +10,7 @@
       <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=354aac6f" />
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=a746c00c" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/qiskit-sphinx-theme.css?v=8ff9dcb6" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=302659d7" />
     <link rel="stylesheet" type="text/css" href="../_static/custom.css" />
     
@@ -172,7 +173,7 @@
           <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
         </button>
       </div>
-      <label class="toc-overlay-icon toc-header-icon" for="__toc">
+      <label class="toc-overlay-icon toc-header-icon no-toc" for="__toc">
         <div class="visually-hidden">Toggle table of contents sidebar</div>
         <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
       </label>
@@ -232,173 +233,14 @@
               <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
             </button>
           </div>
-          <label class="toc-overlay-icon toc-content-icon" for="__toc">
+          <label class="toc-overlay-icon toc-content-icon no-toc" for="__toc">
             <div class="visually-hidden">Toggle table of contents sidebar</div>
             <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
           </label>
         </div>
         <article role="main" id="furo-main-content">
-          <section id="module-gadd.sequences">
-<span id="dd-sequences"></span><h1>DD Sequences<a class="headerlink" href="#module-gadd.sequences" title="Link to this heading">¶</a></h1>
-<dl class="py function">
-<dt class="sig sig-object py" id="gadd.sequences.create_xb_gate">
-<span class="sig-prename descclassname"><span class="pre">gadd.sequences.</span></span><span class="sig-name descname"><span class="pre">create_xb_gate</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gadd/sequences.html#create_xb_gate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gadd.sequences.create_xb_gate" title="Link to this definition">¶</a></dt>
-<dd><p>Create Xb gate (X with additional phase).</p>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="gadd.sequences.create_yb_gate">
-<span class="sig-prename descclassname"><span class="pre">gadd.sequences.</span></span><span class="sig-name descname"><span class="pre">create_yb_gate</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gadd/sequences.html#create_yb_gate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gadd.sequences.create_yb_gate" title="Link to this definition">¶</a></dt>
-<dd><p>Create Yb gate (Y with additional phase).</p>
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="gadd.sequences.DDSequence">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">gadd.sequences.</span></span><span class="sig-name descname"><span class="pre">DDSequence</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">gates</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.13)"><span class="pre">List</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gadd/sequences.html#DDSequence"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gadd.sequences.DDSequence" title="Link to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
-<p>Dynamical Decoupling sequence representation.</p>
-<dl class="py attribute">
-<dt class="sig sig-object py" id="gadd.sequences.DDSequence.gates">
-<span class="sig-name descname"><span class="pre">gates</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.13)"><span class="pre">List</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#gadd.sequences.DDSequence.gates" title="Link to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="gadd.sequences.DDSequence.__post_init__">
-<span class="sig-name descname"><span class="pre">__post_init__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gadd/sequences.html#DDSequence.__post_init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gadd.sequences.DDSequence.__post_init__" title="Link to this definition">¶</a></dt>
-<dd><p>Validate sequence after initialization.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="gadd.sequences.DDSequence.copy">
-<span class="sig-name descname"><span class="pre">copy</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#gadd.sequences.DDSequence" title="gadd.sequences.DDSequence"><span class="pre">DDSequence</span></a></span></span><a class="reference internal" href="../_modules/gadd/sequences.html#DDSequence.copy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gadd.sequences.DDSequence.copy" title="Link to this definition">¶</a></dt>
-<dd><p>Create a deep copy of the sequence.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="gadd.sequences.DDSequence.to_indices">
-<span class="sig-name descname"><span class="pre">to_indices</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.13)"><span class="pre">List</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><span class="pre">int</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/gadd/sequences.html#DDSequence.to_indices"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gadd.sequences.DDSequence.to_indices" title="Link to this definition">¶</a></dt>
-<dd><p>Convert gate names to group element indices.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="gadd.sequences.DDSequence.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">gates</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.13)"><span class="pre">List</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></span></span><a class="headerlink" href="#gadd.sequences.DDSequence.__init__" title="Link to this definition">¶</a></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="gadd.sequences.StandardSequences">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">gadd.sequences.</span></span><span class="sig-name descname"><span class="pre">StandardSequences</span></span><a class="reference internal" href="../_modules/gadd/sequences.html#StandardSequences"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gadd.sequences.StandardSequences" title="Link to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
-<p>Standard DD sequence implementations.</p>
-<dl class="py method">
-<dt class="sig sig-object py" id="gadd.sequences.StandardSequences.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gadd/sequences.html#StandardSequences.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gadd.sequences.StandardSequences.__init__" title="Link to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="gadd.sequences.StandardSequences.get">
-<span class="sig-name descname"><span class="pre">get</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#gadd.sequences.DDSequence" title="gadd.sequences.DDSequence"><span class="pre">DDSequence</span></a></span></span><a class="reference internal" href="../_modules/gadd/sequences.html#StandardSequences.get"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gadd.sequences.StandardSequences.get" title="Link to this definition">¶</a></dt>
-<dd><p>Get a standard sequence by name.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="gadd.sequences.StandardSequences.is_staggered">
-<span class="sig-name descname"><span class="pre">is_staggered</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.13)"><span class="pre">bool</span></a></span></span><a class="reference internal" href="../_modules/gadd/sequences.html#StandardSequences.is_staggered"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gadd.sequences.StandardSequences.is_staggered" title="Link to this definition">¶</a></dt>
-<dd><p>Check if a sequence should be applied with staggering.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="gadd.sequences.StandardSequences.list_available">
-<span class="sig-name descname"><span class="pre">list_available</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.13)"><span class="pre">List</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/gadd/sequences.html#StandardSequences.list_available"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gadd.sequences.StandardSequences.list_available" title="Link to this definition">¶</a></dt>
-<dd><p>List available standard sequences.</p>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="gadd.sequences.DDStrategy">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">gadd.sequences.</span></span><span class="sig-name descname"><span class="pre">DDStrategy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sequences</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.13)"><span class="pre">List</span></a><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#gadd.sequences.DDSequence" title="gadd.sequences.DDSequence"><span class="pre">DDSequence</span></a><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.13)"><span class="pre">Dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><span class="pre">int</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="#gadd.sequences.DDSequence" title="gadd.sequences.DDSequence"><span class="pre">DDSequence</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gadd/sequences.html#DDStrategy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gadd.sequences.DDStrategy" title="Link to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
-<p>Collection of DD sequences assigned to different colors.</p>
-<dl class="py method">
-<dt class="sig sig-object py" id="gadd.sequences.DDStrategy.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sequences</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.13)"><span class="pre">List</span></a><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#gadd.sequences.DDSequence" title="gadd.sequences.DDSequence"><span class="pre">DDSequence</span></a><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.13)"><span class="pre">Dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><span class="pre">int</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="#gadd.sequences.DDSequence" title="gadd.sequences.DDSequence"><span class="pre">DDSequence</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gadd/sequences.html#DDStrategy.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gadd.sequences.DDStrategy.__init__" title="Link to this definition">¶</a></dt>
-<dd><p>Initialize DD strategy with sequences for each color.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>sequences</strong> – Either a list of DDSequence objects (assigned to colors 0, 1, 2, …)
-or a dictionary mapping color indices to DD sequences</p>
-</dd>
-<dt class="field-even">Raises<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#ValueError" title="(in Python v3.13)"><strong>ValueError</strong></a> – If sequences is empty or invalid type</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="gadd.sequences.DDStrategy.from_single_sequence">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_single_sequence</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sequence</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#gadd.sequences.DDSequence" title="gadd.sequences.DDSequence"><span class="pre">DDSequence</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_colors</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><span class="pre">int</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#gadd.sequences.DDStrategy" title="gadd.sequences.DDStrategy"><span class="pre">DDStrategy</span></a></span></span><a class="reference internal" href="../_modules/gadd/sequences.html#DDStrategy.from_single_sequence"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gadd.sequences.DDStrategy.from_single_sequence" title="Link to this definition">¶</a></dt>
-<dd><p>Create strategy by repeating single sequence for all colors.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="gadd.sequences.DDStrategy.get_sequence">
-<span class="sig-name descname"><span class="pre">get_sequence</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">color</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><span class="pre">int</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#gadd.sequences.DDSequence" title="gadd.sequences.DDSequence"><span class="pre">DDSequence</span></a></span></span><a class="reference internal" href="../_modules/gadd/sequences.html#DDStrategy.get_sequence"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gadd.sequences.DDStrategy.get_sequence" title="Link to this definition">¶</a></dt>
-<dd><p>Get sequence for specific color.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="gadd.sequences.DDStrategy.to_dict">
-<span class="sig-name descname"><span class="pre">to_dict</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.13)"><span class="pre">Dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">any</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/gadd/sequences.html#DDStrategy.to_dict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gadd.sequences.DDStrategy.to_dict" title="Link to this definition">¶</a></dt>
-<dd><p>Convert strategy to dictionary for serialization.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="gadd.sequences.DDStrategy.from_dict">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.13)"><span class="pre">Dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">any</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#gadd.sequences.DDStrategy" title="gadd.sequences.DDStrategy"><span class="pre">DDStrategy</span></a></span></span><a class="reference internal" href="../_modules/gadd/sequences.html#DDStrategy.from_dict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gadd.sequences.DDStrategy.from_dict" title="Link to this definition">¶</a></dt>
-<dd><p>Create strategy from dictionary.</p>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="gadd.sequences.ColorAssignment">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">gadd.sequences.</span></span><span class="sig-name descname"><span class="pre">ColorAssignment</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">assignments</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.13)"><span class="pre">Dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><span class="pre">int</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.13)"><span class="pre">List</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><span class="pre">int</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gadd/sequences.html#ColorAssignment"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gadd.sequences.ColorAssignment" title="Link to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
-<p>Assignment of device qubits to colors.</p>
-<dl class="py method">
-<dt class="sig sig-object py" id="gadd.sequences.ColorAssignment.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">assignments</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.13)"><span class="pre">Dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><span class="pre">int</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.13)"><span class="pre">List</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><span class="pre">int</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gadd/sequences.html#ColorAssignment.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gadd.sequences.ColorAssignment.__init__" title="Link to this definition">¶</a></dt>
-<dd><p>Initialize color assignment.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>assignments</strong> – Dictionary mapping colors to lists of qubit indices</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="gadd.sequences.ColorAssignment.get_color">
-<span class="sig-name descname"><span class="pre">get_color</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">qubit</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><span class="pre">int</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><span class="pre">int</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></span></span><a class="reference internal" href="../_modules/gadd/sequences.html#ColorAssignment.get_color"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gadd.sequences.ColorAssignment.get_color" title="Link to this definition">¶</a></dt>
-<dd><p>Get color assigned to a qubit.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="gadd.sequences.ColorAssignment.get_qubits">
-<span class="sig-name descname"><span class="pre">get_qubits</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">color</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><span class="pre">int</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.13)"><span class="pre">List</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><span class="pre">int</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/gadd/sequences.html#ColorAssignment.get_qubits"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gadd.sequences.ColorAssignment.get_qubits" title="Link to this definition">¶</a></dt>
-<dd><p>Get qubits assigned to a color.</p>
-</dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="gadd.sequences.ColorAssignment.n_colors">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">n_colors</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><span class="pre">int</span></a></em><a class="headerlink" href="#gadd.sequences.ColorAssignment.n_colors" title="Link to this definition">¶</a></dt>
-<dd><p>Number of colors used in assignment.</p>
-</dd></dl>
-
-</dd></dl>
-
+          <section id="dd-sequences">
+<h1>DD Sequences<a class="headerlink" href="#dd-sequences" title="Link to this heading">¶</a></h1>
 </section>
 
         </article>
@@ -444,58 +286,8 @@ or a dictionary mapping color indices to DD sequences</p>
         
       </footer>
     </div>
-    <aside class="toc-drawer">
+    <aside class="toc-drawer no-toc">
       
-      
-      <div class="toc-sticky toc-scroll">
-        <div class="toc-title-container">
-          <span class="toc-title">
-            On this page
-          </span>
-        </div>
-        <div class="toc-tree-container">
-          <div class="toc-tree">
-            <ul>
-<li><a class="reference internal" href="#">DD Sequences</a><ul>
-<li><a class="reference internal" href="#gadd.sequences.create_xb_gate"><code class="docutils literal notranslate"><span class="pre">create_xb_gate()</span></code></a></li>
-<li><a class="reference internal" href="#gadd.sequences.create_yb_gate"><code class="docutils literal notranslate"><span class="pre">create_yb_gate()</span></code></a></li>
-<li><a class="reference internal" href="#gadd.sequences.DDSequence"><code class="docutils literal notranslate"><span class="pre">DDSequence</span></code></a><ul>
-<li><a class="reference internal" href="#gadd.sequences.DDSequence.gates"><code class="docutils literal notranslate"><span class="pre">DDSequence.gates</span></code></a></li>
-<li><a class="reference internal" href="#gadd.sequences.DDSequence.__post_init__"><code class="docutils literal notranslate"><span class="pre">DDSequence.__post_init__()</span></code></a></li>
-<li><a class="reference internal" href="#gadd.sequences.DDSequence.copy"><code class="docutils literal notranslate"><span class="pre">DDSequence.copy()</span></code></a></li>
-<li><a class="reference internal" href="#gadd.sequences.DDSequence.to_indices"><code class="docutils literal notranslate"><span class="pre">DDSequence.to_indices()</span></code></a></li>
-<li><a class="reference internal" href="#gadd.sequences.DDSequence.__init__"><code class="docutils literal notranslate"><span class="pre">DDSequence.__init__()</span></code></a></li>
-</ul>
-</li>
-<li><a class="reference internal" href="#gadd.sequences.StandardSequences"><code class="docutils literal notranslate"><span class="pre">StandardSequences</span></code></a><ul>
-<li><a class="reference internal" href="#gadd.sequences.StandardSequences.__init__"><code class="docutils literal notranslate"><span class="pre">StandardSequences.__init__()</span></code></a></li>
-<li><a class="reference internal" href="#gadd.sequences.StandardSequences.get"><code class="docutils literal notranslate"><span class="pre">StandardSequences.get()</span></code></a></li>
-<li><a class="reference internal" href="#gadd.sequences.StandardSequences.is_staggered"><code class="docutils literal notranslate"><span class="pre">StandardSequences.is_staggered()</span></code></a></li>
-<li><a class="reference internal" href="#gadd.sequences.StandardSequences.list_available"><code class="docutils literal notranslate"><span class="pre">StandardSequences.list_available()</span></code></a></li>
-</ul>
-</li>
-<li><a class="reference internal" href="#gadd.sequences.DDStrategy"><code class="docutils literal notranslate"><span class="pre">DDStrategy</span></code></a><ul>
-<li><a class="reference internal" href="#gadd.sequences.DDStrategy.__init__"><code class="docutils literal notranslate"><span class="pre">DDStrategy.__init__()</span></code></a></li>
-<li><a class="reference internal" href="#gadd.sequences.DDStrategy.from_single_sequence"><code class="docutils literal notranslate"><span class="pre">DDStrategy.from_single_sequence()</span></code></a></li>
-<li><a class="reference internal" href="#gadd.sequences.DDStrategy.get_sequence"><code class="docutils literal notranslate"><span class="pre">DDStrategy.get_sequence()</span></code></a></li>
-<li><a class="reference internal" href="#gadd.sequences.DDStrategy.to_dict"><code class="docutils literal notranslate"><span class="pre">DDStrategy.to_dict()</span></code></a></li>
-<li><a class="reference internal" href="#gadd.sequences.DDStrategy.from_dict"><code class="docutils literal notranslate"><span class="pre">DDStrategy.from_dict()</span></code></a></li>
-</ul>
-</li>
-<li><a class="reference internal" href="#gadd.sequences.ColorAssignment"><code class="docutils literal notranslate"><span class="pre">ColorAssignment</span></code></a><ul>
-<li><a class="reference internal" href="#gadd.sequences.ColorAssignment.__init__"><code class="docutils literal notranslate"><span class="pre">ColorAssignment.__init__()</span></code></a></li>
-<li><a class="reference internal" href="#gadd.sequences.ColorAssignment.get_color"><code class="docutils literal notranslate"><span class="pre">ColorAssignment.get_color()</span></code></a></li>
-<li><a class="reference internal" href="#gadd.sequences.ColorAssignment.get_qubits"><code class="docutils literal notranslate"><span class="pre">ColorAssignment.get_qubits()</span></code></a></li>
-<li><a class="reference internal" href="#gadd.sequences.ColorAssignment.n_colors"><code class="docutils literal notranslate"><span class="pre">ColorAssignment.n_colors</span></code></a></li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
-
-          </div>
-        </div>
-      </div>
       
       
     </aside>
@@ -504,6 +296,8 @@ or a dictionary mapping color indices to DD sequences</p>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/furo.js?v=5fa4622c"></script>
+    <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../_static/copybutton.js?v=f281be69"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     </body>
 </html>

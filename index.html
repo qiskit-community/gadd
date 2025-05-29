@@ -10,6 +10,7 @@
       <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?v=354aac6f" />
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=a746c00c" />
     <link rel="stylesheet" type="text/css" href="_static/styles/qiskit-sphinx-theme.css?v=8ff9dcb6" />
+    <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="_static/styles/furo-extensions.css?v=302659d7" />
     <link rel="stylesheet" type="text/css" href="_static/custom.css" />
     
@@ -240,97 +241,197 @@
         <article role="main" id="furo-main-content">
           <section id="gadd-genetic-algorithm-for-dynamical-decoupling">
 <h1>GADD: Genetic Algorithm for Dynamical Decoupling<a class="headerlink" href="#gadd-genetic-algorithm-for-dynamical-decoupling" title="Link to this heading">¶</a></h1>
-<p><strong>GADD</strong> is a Python package for empirically optimizing dynamical decoupling sequences on quantum processors using genetic algorithms. Based on the research paper <a class="reference external" href="https://arxiv.org/abs/2403.02294">“Empirical learning of dynamical decoupling on quantum processors”</a>.</p>
-<a class="reference external image-reference" href="https://www.python.org/downloads/"><img alt="Python 3.9+" src="https://img.shields.io/badge/python-3.9+-blue.svg" />
-</a>
-<a class="reference external image-reference" href="https://qiskit.org/"><img alt="Qiskit" src="https://img.shields.io/badge/Qiskit-2.0+-blue.svg" />
-</a>
-<a class="reference external image-reference" href="https://opensource.org/licenses/Apache-2.0"><img alt="License" src="https://img.shields.io/badge/License-Apache%202.0-blue.svg" />
-</a>
-<section id="quick-start">
-<h2>Quick Start<a class="headerlink" href="#quick-start" title="Link to this heading">¶</a></h2>
-<p>Install GADD:</p>
+<p><a class="reference external" href="https://www.python.org/downloads/"><img alt="Python 3.9+" src="https://img.shields.io/badge/python-3.9+-blue.svg" /></a>
+<a class="reference external" href="https://qiskit.org/"><img alt="Qiskit" src="https://img.shields.io/badge/Qiskit-2.0+-blue.svg" /></a>
+<a class="reference external" href="https://opensource.org/licenses/Apache-2.0"><img alt="License" src="https://img.shields.io/badge/License-Apache%202.0-blue.svg" /></a>
+<a class="reference external" href="https://coveralls.io/github/qiskit-community/gadd?branch=main"><img alt="Coverage Status" src="https://coveralls.io/repos/github/qiskit-community/gadd/badge.svg?branch=main" /></a></p>
+<p><strong>GADD</strong> is a Python package for empirically optimizing dynamical decoupling (DD) sequences on quantum processors using a genetic algorithm as described in the research paper <a class="reference external" href="https://arxiv.org/abs/2403.02294">“Empirical learning of dynamical decoupling on quantum processors”</a>.</p>
+<section id="key-features">
+<h2>Key Features<a class="headerlink" href="#key-features" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><strong>Empirical Optimization</strong>: Learn DD sequences directly from quantum hardware feedback</p></li>
+<li><p><strong>Hardware Agnostic</strong>: Works with any quantum backend that supports Qiskit</p></li>
+<li><p><strong>Genetic Algorithm</strong>: Efficient search through large DD sequence spaces</p></li>
+<li><p><strong>Multiple Utility Functions</strong>: Built-in metrics for various quantum applications</p></li>
+<li><p><strong>Comparative Analysis</strong>: Benchmark against standard DD sequences (XY4, CPMG, EDD, URDD)</p></li>
+<li><p><strong>Comprehensive Results</strong>: Detailed training progression and performance analytics</p></li>
+</ul>
+</section>
+<section id="installation">
+<h2>Installation<a class="headerlink" href="#installation" title="Link to this heading">¶</a></h2>
+<section id="requirements">
+<h3>Requirements<a class="headerlink" href="#requirements" title="Link to this heading">¶</a></h3>
+<p>This package is designed to be used with <a class="reference external" href="https://github.com/Qiskit/qiskit">Qiskit</a> and the <a class="reference external" href="https://github.com/Qiskit/qiskit-ibm-runtime">Qiskit Runtime IBM Client</a>. To run on IBM hardware, you will need an IBM Quantum account.</p>
+</section>
+<section id="install-from-pypi">
+<h3>Install from PyPI<a class="headerlink" href="#install-from-pypi" title="Link to this heading">¶</a></h3>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>gadd
 </pre></div>
 </div>
-<p>Basic usage:</p>
+</section>
+<section id="install-from-source">
+<h3>Install from Source<a class="headerlink" href="#install-from-source" title="Link to this heading">¶</a></h3>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/qiskit-community/gadd.git
+<span class="nb">cd</span><span class="w"> </span>gadd
+pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span>.
+</pre></div>
+</div>
+</section>
+</section>
+<section id="usage-examples">
+<h2>Usage Examples<a class="headerlink" href="#usage-examples" title="Link to this heading">¶</a></h2>
+<p>The core class <code class="docutils literal notranslate"><span class="pre">GADD</span></code> runs the genetic algorithm training process
+on training circuits, outputting the best sequence and intermediate training data, if desired:</p>
+<section id="basic-training">
+<h3>1. Basic training<a class="headerlink" href="#basic-training" title="Link to this heading">¶</a></h3>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">gadd</span> <span class="kn">import</span> <span class="n">GADD</span><span class="p">,</span> <span class="n">TrainingConfig</span>
-<span class="kn">from</span> <span class="nn">qiskit</span> <span class="kn">import</span> <span class="n">QuantumCircuit</span>
+<span class="kn">from</span> <span class="nn">gadd.utility_functions</span> <span class="kn">import</span> <span class="n">success_probability_utility</span>
 <span class="kn">from</span> <span class="nn">qiskit_ibm_runtime</span> <span class="kn">import</span> <span class="n">QiskitRuntimeService</span><span class="p">,</span> <span class="n">Sampler</span>
 
-<span class="c1"># Create quantum circuit</span>
+<span class="n">service</span> <span class="o">=</span> <span class="n">QiskitRuntimeService</span><span class="p">()</span>
+<span class="n">backend</span> <span class="o">=</span> <span class="n">service</span><span class="o">.</span><span class="n">least_busy</span><span class="p">()</span>
+
+<span class="c1"># Create a simple quantum circuit</span>
 <span class="n">circuit</span> <span class="o">=</span> <span class="n">QuantumCircuit</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
 <span class="n">circuit</span><span class="o">.</span><span class="n">h</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
 <span class="n">circuit</span><span class="o">.</span><span class="n">cx</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
 <span class="n">circuit</span><span class="o">.</span><span class="n">cx</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+<span class="n">circuit</span><span class="o">.</span><span class="n">measure_all</span><span class="p">()</span>
 
-<span class="c1"># Setup GADD</span>
-<span class="n">service</span> <span class="o">=</span> <span class="n">QiskitRuntimeService</span><span class="p">()</span>
-<span class="n">backend</span> <span class="o">=</span> <span class="n">service</span><span class="o">.</span><span class="n">least_busy</span><span class="p">()</span>
+<span class="c1"># Simple configuration</span>
 <span class="n">config</span> <span class="o">=</span> <span class="n">TrainingConfig</span><span class="p">(</span><span class="n">pop_size</span><span class="o">=</span><span class="mi">16</span><span class="p">,</span> <span class="n">n_iterations</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
 <span class="n">gadd</span> <span class="o">=</span> <span class="n">GADD</span><span class="p">(</span><span class="n">backend</span><span class="o">=</span><span class="n">backend</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">)</span>
 
-<span class="c1"># Train DD sequences</span>
-<span class="k">def</span> <span class="nf">utility_function</span><span class="p">(</span><span class="n">circuit</span><span class="p">,</span> <span class="n">result</span><span class="p">):</span>
-    <span class="n">counts</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">get_counts</span><span class="p">()</span>
-    <span class="k">return</span> <span class="n">counts</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;000&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="o">/</span> <span class="nb">sum</span><span class="p">(</span><span class="n">counts</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
-
 <span class="n">best_strategy</span><span class="p">,</span> <span class="n">result</span> <span class="o">=</span> <span class="n">gadd</span><span class="o">.</span><span class="n">train</span><span class="p">(</span>
-    <span class="n">sampler</span><span class="o">=</span><span class="n">Sampler</span><span class="p">(),</span>
+    <span class="n">sampler</span><span class="o">=</span><span class="n">sampler</span><span class="p">,</span>
     <span class="n">training_circuit</span><span class="o">=</span><span class="n">circuit</span><span class="p">,</span>
-    <span class="n">utility_function</span><span class="o">=</span><span class="n">utility_function</span>
+    <span class="n">utility_function</span><span class="o">=</span><span class="n">success_probability_utility</span>
 <span class="p">)</span>
 </pre></div>
 </div>
 </section>
-<section id="contents">
-<h2>Contents<a class="headerlink" href="#contents" title="Link to this heading">¶</a></h2>
-<div class="toctree-wrapper compound">
-<p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="api/gadd.html">GADD Core Module</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="api/gadd.html#gadd.gadd.TrainingConfig"><code class="docutils literal notranslate"><span class="pre">TrainingConfig</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/gadd.html#gadd.gadd.TrainingState"><code class="docutils literal notranslate"><span class="pre">TrainingState</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/gadd.html#gadd.gadd.TrainingResult"><code class="docutils literal notranslate"><span class="pre">TrainingResult</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/gadd.html#gadd.gadd.GADD"><code class="docutils literal notranslate"><span class="pre">GADD</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="api/sequences.html">DD Sequences</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="api/sequences.html#gadd.sequences.create_xb_gate"><code class="docutils literal notranslate"><span class="pre">create_xb_gate()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/sequences.html#gadd.sequences.create_yb_gate"><code class="docutils literal notranslate"><span class="pre">create_yb_gate()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/sequences.html#gadd.sequences.DDSequence"><code class="docutils literal notranslate"><span class="pre">DDSequence</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/sequences.html#gadd.sequences.StandardSequences"><code class="docutils literal notranslate"><span class="pre">StandardSequences</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/sequences.html#gadd.sequences.DDStrategy"><code class="docutils literal notranslate"><span class="pre">DDStrategy</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/sequences.html#gadd.sequences.ColorAssignment"><code class="docutils literal notranslate"><span class="pre">ColorAssignment</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="api/utility_functions.html">Utility Functions</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="api/utility_functions.html#gadd.utility_functions.normalize_counts"><code class="docutils literal notranslate"><span class="pre">normalize_counts()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/utility_functions.html#gadd.utility_functions.UtilityFunction"><code class="docutils literal notranslate"><span class="pre">UtilityFunction</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/utility_functions.html#gadd.utility_functions.SuccessProbability"><code class="docutils literal notranslate"><span class="pre">SuccessProbability</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/utility_functions.html#gadd.utility_functions.OneNormDistance"><code class="docutils literal notranslate"><span class="pre">OneNormDistance</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/utility_functions.html#gadd.utility_functions.GHZUtility"><code class="docutils literal notranslate"><span class="pre">GHZUtility</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/utility_functions.html#gadd.utility_functions.CustomUtility"><code class="docutils literal notranslate"><span class="pre">CustomUtility</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/utility_functions.html#gadd.utility_functions.UtilityFactory"><code class="docutils literal notranslate"><span class="pre">UtilityFactory</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="api/group_operations.html">Group Operations</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="api/group_operations.html#gadd.group_operations.multiply"><code class="docutils literal notranslate"><span class="pre">multiply()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/group_operations.html#gadd.group_operations.invert"><code class="docutils literal notranslate"><span class="pre">invert()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/group_operations.html#gadd.group_operations.complete_sequence_to_identity"><code class="docutils literal notranslate"><span class="pre">complete_sequence_to_identity()</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="api/circuit_padding.html">Circuit Padding</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="api/circuit_padding.html#gadd.circuit_padding.DDPulse"><code class="docutils literal notranslate"><span class="pre">DDPulse</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/circuit_padding.html#gadd.circuit_padding.get_instruction_duration"><code class="docutils literal notranslate"><span class="pre">get_instruction_duration()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/circuit_padding.html#gadd.circuit_padding.apply_dd_strategy"><code class="docutils literal notranslate"><span class="pre">apply_dd_strategy()</span></code></a></li>
-</ul>
-</li>
-</ul>
+<section id="custom-parameters">
+<h3>2. Custom parameters<a class="headerlink" href="#custom-parameters" title="Link to this heading">¶</a></h3>
+<p>The package supports customizing training parameters and utility functions. Plotting
+the training progression and running the circuit on the target circuit are also supported.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">qiskit.visualization</span> <span class="kn">import</span> <span class="n">timeline_drawer</span>
+
+<span class="n">config</span> <span class="o">=</span> <span class="n">TrainingConfig</span><span class="p">(</span>
+    <span class="n">pop_size</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span>              <span class="c1"># Larger population</span>
+    <span class="n">sequence_length</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span>        <span class="c1"># 8-gate DD sequences</span>
+    <span class="n">n_iterations</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span>          <span class="c1"># More iterations</span>
+    <span class="n">mutation_probability</span><span class="o">=</span><span class="mf">0.8</span><span class="p">,</span> <span class="c1"># Higher mutation rate</span>
+    <span class="n">shots</span><span class="o">=</span><span class="mi">8000</span><span class="p">,</span>              <span class="c1"># More shots per evaluation</span>
+    <span class="n">num_colors</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>            <span class="c1"># 3-coloring for qubit graph</span>
+    <span class="n">dynamic_mutation</span><span class="o">=</span><span class="kc">True</span>    <span class="c1"># Adaptive mutation</span>
+<span class="p">)</span>
+
+<span class="n">gadd</span> <span class="o">=</span> <span class="n">GADD</span><span class="p">(</span>
+    <span class="n">backend</span><span class="o">=</span><span class="n">backend</span><span class="p">,</span>
+    <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">,</span>
+    <span class="n">seed</span><span class="o">=</span><span class="mi">42</span>
+<span class="p">)</span>
+
+<span class="c1"># Train with checkpointing and comparing against canonical sequences</span>
+<span class="n">best_strategy</span><span class="p">,</span> <span class="n">result</span> <span class="o">=</span> <span class="n">gadd</span><span class="o">.</span><span class="n">train</span><span class="p">(</span>
+    <span class="n">sampler</span><span class="o">=</span><span class="n">sampler</span><span class="p">,</span>
+    <span class="n">training_circuit</span><span class="o">=</span><span class="n">circuit</span><span class="p">,</span>
+    <span class="n">utility_function</span><span class="o">=</span><span class="n">utility_function</span><span class="p">,</span>
+    <span class="n">save_path</span><span class="o">=</span><span class="s2">&quot;./checkpoints&quot;</span><span class="p">,</span>
+    <span class="n">comparison_seqs</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;cpmg&#39;</span><span class="p">,</span> <span class="s1">&#39;cpmg_staggered&#39;</span><span class="p">,</span> <span class="s1">&#39;xy4&#39;</span><span class="p">,</span> <span class="s1">&#39;xy4_staggered&#39;</span><span class="p">,</span> <span class="s1">&#39;edd&#39;</span><span class="p">,</span> <span class="s1">&#39;edd_staggered&#39;</span><span class="p">]</span>
+<span class="p">)</span>
+
+<span class="c1"># Plot results</span>
+<span class="n">gadd</span><span class="o">.</span><span class="n">plot_training_progress</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">save_path</span><span class="o">=</span><span class="s2">&quot;training_plot.png&quot;</span><span class="p">)</span>
+
+<span class="c1"># Visualize the target circuit with DD sequences</span>
+<span class="n">circuit_with_dd</span> <span class="o">=</span> <span class="n">gadd</span><span class="o">.</span><span class="n">apply_dd</span><span class="p">(</span>
+    <span class="n">strategy</span> <span class="o">=</span> <span class="n">best_strategy</span><span class="p">,</span>
+    <span class="n">target_circuit</span> <span class="o">=</span> <span class="n">target_circuit</span><span class="p">,</span>
+    <span class="n">backend</span> <span class="o">=</span> <span class="n">backend</span>
+<span class="p">)</span>
+<span class="n">timeline_drawer</span><span class="p">(</span><span class="n">circuit_with_dd</span><span class="p">)</span>
+
+<span class="c1"># Run the best sequence on the target circuit</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">gadd</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+    <span class="n">strategy</span> <span class="o">=</span> <span class="n">best_strategy</span><span class="p">,</span>
+    <span class="n">target_circuit</span><span class="o">=</span><span class="n">target_circuit</span><span class="p">,</span>
+    <span class="n">sampler</span><span class="o">=</span><span class="n">sampler</span>
+<span class="p">)</span>
+</pre></div>
 </div>
 </section>
-<section id="research-paper">
-<h2>Research Paper<a class="headerlink" href="#research-paper" title="Link to this heading">¶</a></h2>
+<section id="save-and-resume-training">
+<h3>3. Save and resume training<a class="headerlink" href="#save-and-resume-training" title="Link to this heading">¶</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Resume from previous training</span>
+<span class="n">previous_state</span> <span class="o">=</span> <span class="n">gadd</span><span class="o">.</span><span class="n">load_training_state</span><span class="p">(</span><span class="s2">&quot;./checkpoints/checkpoint_iter_20.json&quot;</span><span class="p">)</span>
+
+<span class="n">best_strategy</span><span class="p">,</span> <span class="n">result</span> <span class="o">=</span> <span class="n">gadd</span><span class="o">.</span><span class="n">train</span><span class="p">(</span>
+    <span class="n">sampler</span><span class="o">=</span><span class="n">sampler</span><span class="p">,</span>
+    <span class="n">training_circuit</span><span class="o">=</span><span class="n">circuit</span><span class="p">,</span>
+    <span class="n">utility_function</span><span class="o">=</span><span class="n">utility_function</span><span class="p">,</span>
+    <span class="n">resume_from_state</span><span class="o">=</span><span class="n">previous_state</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="custom-utility-functions">
+<h3>4. Custom utility functions<a class="headerlink" href="#custom-utility-functions" title="Link to this heading">¶</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">custom_fidelity</span><span class="p">(</span><span class="n">circuit</span><span class="p">,</span> <span class="n">result</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Custom fidelity-based utility function.&quot;&quot;&quot;</span>
+    <span class="n">counts</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">get_counts</span><span class="p">()</span>
+    <span class="n">total_shots</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">counts</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+
+    <span class="c1"># Expected distribution for your specific circuit</span>
+    <span class="n">expected_dist</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;000&#39;</span><span class="p">:</span> <span class="mf">0.5</span><span class="p">,</span> <span class="s1">&#39;111&#39;</span><span class="p">:</span> <span class="mf">0.5</span><span class="p">}</span>  <span class="c1"># GHZ state</span>
+
+    <span class="c1"># Calculate 1-norm distance</span>
+    <span class="n">observed_dist</span> <span class="o">=</span> <span class="p">{</span><span class="n">state</span><span class="p">:</span> <span class="n">count</span><span class="o">/</span><span class="n">total_shots</span> <span class="k">for</span> <span class="n">state</span><span class="p">,</span> <span class="n">count</span> <span class="ow">in</span> <span class="n">counts</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+
+    <span class="n">fidelity</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">-</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="nb">sum</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">expected_dist</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="o">-</span> <span class="n">observed_dist</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
+                             <span class="k">for</span> <span class="n">state</span> <span class="ow">in</span> <span class="nb">set</span><span class="p">(</span><span class="n">expected_dist</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span> <span class="o">|</span> <span class="nb">set</span><span class="p">(</span><span class="n">observed_dist</span><span class="o">.</span><span class="n">keys</span><span class="p">()))</span>
+
+    <span class="k">return</span> <span class="n">fidelity</span>
+
+<span class="c1"># Use custom utility function</span>
+<span class="n">best_strategy</span><span class="p">,</span> <span class="n">result</span> <span class="o">=</span> <span class="n">gadd</span><span class="o">.</span><span class="n">train</span><span class="p">(</span>
+    <span class="n">sampler</span><span class="o">=</span><span class="n">sampler</span><span class="p">,</span>
+    <span class="n">training_circuit</span><span class="o">=</span><span class="n">circuit</span><span class="p">,</span>
+    <span class="n">utility_function</span><span class="o">=</span><span class="n">UtilityFactory</span><span class="o">.</span><span class="n">custom</span><span class="p">(</span><span class="n">custom_fidelity</span><span class="p">,</span> <span class="s2">&quot;Custom Fidelity&quot;</span><span class="p">)</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="directory-structure">
+<h2>Directory structure<a class="headerlink" href="#directory-structure" title="Link to this heading">¶</a></h2>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>gadd/
+├── README.md                      # This file
+├── pyproject.toml                 # Package configuration
+├── LICENSE                        # Apache 2.0 license
+├── CITATION.bib                   # BibTeX citation file
+│
+├── gadd/                          # Package directory
+│   ├── __init__.py                # Package initialization
+│   ├── gadd.py                    # Main GADD algorithm implementation
+│   ├── experiments.py             # GADD experiments from the paper
+│   ├── sequences.py               # DD sequence definitions
+│   ├── utility_functions.py       # Utility function implementations
+│   ├── group_operations.py        # Group theory operations
+│   └── circuit_padding.py         # Circuit padding utilities
+|
+└── tests/                         # Test suite
+    ├── __init__.py                # Test initialization
+    ├── test_gadd.py               # Core algorithm tests
+    ├── test_sequences.py          # DD sequence tests
+    ├── test_utility_functions.py  # Utility function tests
+    ├── test_group_operations.py   # Group operation tests
+    └── test_circuit_padding.py    # DD sequence tests
+</pre></div>
+</div>
+</section>
+<section id="citation">
+<h2>Citation<a class="headerlink" href="#citation" title="Link to this heading">¶</a></h2>
 <p>If you use GADD in your work, please cite:</p>
 <div class="highlight-bibtex notranslate"><div class="highlight"><pre><span></span><span class="nc">@article</span><span class="p">{</span><span class="nl">tong2024empirical</span><span class="p">,</span>
 <span class="w">  </span><span class="na">title</span><span class="p">=</span><span class="s">{Empirical learning of dynamical decoupling on quantum processors}</span><span class="p">,</span>
@@ -339,6 +440,8 @@
 <span class="w">  </span><span class="na">year</span><span class="p">=</span><span class="s">{2024}</span>
 <span class="p">}</span>
 </pre></div>
+</div>
+<div class="toctree-wrapper compound">
 </div>
 </section>
 </section>
@@ -389,9 +492,22 @@
           <div class="toc-tree">
             <ul>
 <li><a class="reference internal" href="#">GADD: Genetic Algorithm for Dynamical Decoupling</a><ul>
-<li><a class="reference internal" href="#quick-start">Quick Start</a></li>
-<li><a class="reference internal" href="#contents">Contents</a></li>
-<li><a class="reference internal" href="#research-paper">Research Paper</a></li>
+<li><a class="reference internal" href="#key-features">Key Features</a></li>
+<li><a class="reference internal" href="#installation">Installation</a><ul>
+<li><a class="reference internal" href="#requirements">Requirements</a></li>
+<li><a class="reference internal" href="#install-from-pypi">Install from PyPI</a></li>
+<li><a class="reference internal" href="#install-from-source">Install from Source</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#usage-examples">Usage Examples</a><ul>
+<li><a class="reference internal" href="#basic-training">1. Basic training</a></li>
+<li><a class="reference internal" href="#custom-parameters">2. Custom parameters</a></li>
+<li><a class="reference internal" href="#save-and-resume-training">3. Save and resume training</a></li>
+<li><a class="reference internal" href="#custom-utility-functions">4. Custom utility functions</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#directory-structure">Directory structure</a></li>
+<li><a class="reference internal" href="#citation">Citation</a></li>
 </ul>
 </li>
 </ul>
@@ -407,6 +523,8 @@
     <script src="_static/doctools.js?v=9bcbadda"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/scripts/furo.js?v=5fa4622c"></script>
+    <script src="_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="_static/copybutton.js?v=f281be69"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     </body>
 </html>
