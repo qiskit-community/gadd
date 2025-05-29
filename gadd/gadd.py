@@ -9,8 +9,6 @@ import json
 import time
 import os
 
-import rustworkx as rx
-
 import numpy as np
 from numpy.random import BitGenerator, Generator, SeedSequence, default_rng
 
@@ -20,7 +18,7 @@ from qiskit.transpiler import InstructionDurations
 from qiskit_ibm_runtime import Sampler
 import matplotlib.pyplot as plt
 
-from .sequences import DDStrategy, DDSequence, StandardSequences
+from .strategies import DDStrategy, DDSequence, StandardSequences, ColorAssignment
 from .group_operations import complete_sequence_to_identity
 from .circuit_padding import apply_dd_strategy as _apply_dd_strategy
 from .utility_functions import UtilityFunction, SuccessProbability
@@ -38,7 +36,7 @@ class TrainingConfig:
         mutation_probability (float): Initial probability of mutation.
         optimization_level (int): Qiskit transpilation optimization level.
         shots (int): Number of shots for quantum circuit execution.
-        num_colors (int): Number of distinct sequences per strategy (``C`` in the paper).
+        num_colors (int): Number of distinct sequences per strategy (``k`` in the paper).
         group_size (int): Size of the decoupling group (``|G|`` in the paper).
         mode (str): Mode for generating initial population.
         dynamic_mutation (bool): Whether to dynamically adjust mutation probability.
@@ -112,7 +110,7 @@ class GADD:
         self,
         backend: Optional[Backend] = None,
         utility_function: Optional[UtilityFunction] = None,
-        coloring: Optional[Dict] = None,
+        coloring: Optional[Union[Dict, ColorAssignment]] = None,
         seed: Optional[Union[int, SeedSequence, BitGenerator, Generator]] = None,
         config: Optional[TrainingConfig] = None,
     ):
@@ -126,16 +124,21 @@ class GADD:
 
         # Set up coloring
         if coloring is None and backend is not None:
-            # Default greedy coloring of coupling map
-            if hasattr(backend, "coupling_map") and backend.coupling_map:
-                self._coloring = rx.graph_greedy_color(
-                    backend.coupling_map.graph.to_undirected()
-                )
-            else:
-                # Fallback: all qubits same color
-                self._coloring = {i: 0 for i in range(backend.num_qubits)}
+            # Default coloring from backend
+            self._coloring = ColorAssignment(backend=backend)
+        elif isinstance(coloring, dict):
+            # Convert dict to ColorAssignment
+            # Assume dict is qubit->color mapping
+            color_to_qubits = {}
+            for qubit, color in coloring.items():
+                if color not in color_to_qubits:
+                    color_to_qubits[color] = []
+                color_to_qubits[color].append(qubit)
+            self._coloring = ColorAssignment.from_manual_assignment(color_to_qubits)
+        elif isinstance(coloring, ColorAssignment):
+            self._coloring = coloring
         else:
-            self._coloring = coloring or {}
+            self._coloring = None
 
         # Decoupling group - matches paper's group G
         self._decoupling_group = ["Ip", "Im", "Xp", "Xm", "Yp", "Ym", "Zp", "Zm"]
@@ -166,11 +169,22 @@ class GADD:
 
     @coloring.setter
     def coloring(self, coloring):
-        if not isinstance(coloring, dict):
+        if isinstance(coloring, dict):
+            # Convert dict to ColorAssignment
+            color_to_qubits = {}
+            for qubit, color in coloring.items():
+                if color not in color_to_qubits:
+                    color_to_qubits[color] = []
+                color_to_qubits[color].append(qubit)
+            self._coloring = ColorAssignment.from_manual_assignment(color_to_qubits)
+        elif isinstance(coloring, ColorAssignment):
+            self._coloring = coloring
+        elif coloring is None:
+            self._coloring = None
+        else:
             raise TypeError(
-                "Coloring must be a dictionary keyed by qubit index with color values"
+                "Coloring must be a dictionary, ColorAssignment instance, or None"
             )
-        self._coloring = coloring
 
     def apply_dd(
         self,
@@ -197,13 +211,15 @@ class GADD:
         # Use provided backend or fall back to instance backend
         backend = backend or self._backend
 
-        # Get coloring for the backend
-        if backend and hasattr(backend, "coupling_map") and backend.coupling_map:
-            coloring = rx.graph_greedy_color(backend.coupling_map.graph.to_undirected())
+        # Get coloring for the circuit
+        if self._coloring is not None:
+            coloring_dict = self._coloring.to_dict()
+        elif backend:
+            color_assignment = ColorAssignment(backend=backend)
+            coloring_dict = color_assignment.to_dict()
         else:
-            coloring = self._coloring or {
-                i: 0 for i in range(target_circuit.num_qubits)
-            }
+            # Fallback: all qubits same color
+            coloring_dict = {i: 0 for i in range(target_circuit.num_qubits)}
 
         # Get instruction durations from backend if available
         instruction_durations = None
@@ -217,7 +233,7 @@ class GADD:
         return _apply_dd_strategy(
             target_circuit,
             strategy,
-            coloring,
+            coloring_dict,
             instruction_durations=instruction_durations,
             staggered=staggered,
         )

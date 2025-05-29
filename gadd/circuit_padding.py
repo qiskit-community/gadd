@@ -16,7 +16,7 @@ from qiskit_ibm_runtime.transpiler.passes.scheduling import (
     PadDynamicalDecoupling,
 )
 
-from .sequences import DDStrategy
+from .strategies import DDStrategy
 
 
 class DDPulse:

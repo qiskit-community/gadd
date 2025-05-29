@@ -10,7 +10,7 @@ from gadd.circuit_padding import (
     get_instruction_duration,
     apply_dd_strategy,
 )
-from gadd.sequences import DDSequence, DDStrategy
+from gadd.strategies import DDSequence, DDStrategy
 
 
 class TestDDPulse(unittest.TestCase):

@@ -19,3 +19,15 @@ If you use GADD in your work, please cite:
       journal={arXiv preprint arXiv:2403.02294},
       year={2024}
     }
+
+
+.. toctree::
+   :hidden:
+   :maxdepth: 2
+   :caption: API Reference
+
+   api/gadd
+   api/sequences
+   api/utility_functions
+   api/group_operations
+   api/circuit_padding

@@ -1,7 +1,7 @@
 """GADD: Genetic Algorithm for Dynamical Decoupling optimization."""
 
 from .gadd import GADD, TrainingConfig, TrainingState, TrainingResult
-from .sequences import DDSequence, DDStrategy, StandardSequences
+from .strategies import DDSequence, DDStrategy, StandardSequences
 from .utility_functions import (
     UtilityFunction,
     SuccessProbability,

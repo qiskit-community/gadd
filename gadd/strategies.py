@@ -1,8 +1,15 @@
+"""
+DD strategies, sequences, and coloring assignments.
+"""
+
 from dataclasses import dataclass
 from typing import List, Dict, Optional, Union
+
+import numpy as np
+import rustworkx as rx
+
 from qiskit.circuit.library import IGate, XGate, YGate, U1Gate, RZGate
 from qiskit import QuantumCircuit
-import numpy as np
 
 
 # Default gateset for DD pulses
@@ -211,34 +218,127 @@ class DDStrategy:
 
 
 class ColorAssignment:
-    """Assignment of device qubits to colors."""
+    """Assignment of device qubits to colors based on connectivity graph."""
 
-    def __init__(self, assignments: Dict[int, List[int]]):
+    def __init__(
+        self, graph: Optional[rx.PyGraph] = None, backend: Optional["Backend"] = None
+    ):
         """
         Initialize color assignment.
 
         Args:
-            assignments: Dictionary mapping colors to lists of qubit indices
+            graph: Connectivity graph where nodes are qubits and edges are connections.
+                If None and backend is provided, will extract from backend.
+            backend: Backend to extract connectivity from if graph not provided.
+
+        Raises:
+            ValueError: If neither graph nor backend is provided.
         """
-        self.assignments = assignments
-        self._validate()
+        if graph is None and backend is None:
+            raise ValueError("Must provide either graph or backend")
+
+        if graph is None:
+            # Extract from backend
+            if hasattr(backend, "coupling_map") and backend.coupling_map:
+                self.graph = backend.coupling_map.graph.to_undirected()
+            else:
+                # Fallback: create complete graph
+                n_qubits = backend.num_qubits if hasattr(backend, "num_qubits") else 1
+                self.graph = rx.PyGraph()
+                self.graph.add_nodes_from(range(n_qubits))
+        else:
+            self.graph = graph
+
+        # Perform graph coloring
+        self._color_map = rx.graph_greedy_color(self.graph)
+
+        # Create assignments dictionary (color -> list of qubits)
+        self.assignments = {}
+        for qubit, color in self._color_map.items():
+            if color not in self.assignments:
+                self.assignments[color] = []
+            self.assignments[color].append(qubit)
+
         # Create reverse mapping for efficiency
-        self._qubit_to_color = {}
+        self._qubit_to_color = self._color_map.copy()
+
+    @classmethod
+    def from_circuit(cls, circuit: QuantumCircuit) -> "ColorAssignment":
+        """
+        Create color assignment from circuit connectivity.
+
+        Args:
+            circuit: Quantum circuit to extract connectivity from.
+
+        Returns:
+            ColorAssignment based on circuit structure.
+        """
+        # Build connectivity graph from circuit
+        graph = rx.PyGraph()
+        qubits = set()
+        edges = set()
+
+        for instruction in circuit.data:
+            if instruction.operation.name in ["cx", "ecr", "cz"]:  # Two-qubit gates
+                qubits_involved = [q._index for q in instruction.qubits]
+                if len(qubits_involved) == 2:
+                    q1, q2 = qubits_involved
+                    qubits.add(q1)
+                    qubits.add(q2)
+                    edges.add((min(q1, q2), max(q1, q2)))
+            else:
+                # Track all qubits
+                for q in instruction.qubits:
+                    qubits.add(q._index)
+
+        # Add all qubits as nodes
+        graph.add_nodes_from(sorted(qubits))
+
+        # Add edges
+        for q1, q2 in edges:
+            graph.add_edge(q1, q2, None)
+
+        return cls(graph=graph)
+
+    @classmethod
+    def from_manual_assignment(
+        cls, assignments: Dict[int, List[int]]
+    ) -> "ColorAssignment":
+        """
+        Create from manual color assignments.
+
+        Args:
+            assignments: Dictionary mapping colors to lists of qubit indices.
+
+        Returns:
+            ColorAssignment with specified assignments.
+        """
+        # Create a graph where qubits with different colors are connected
+        graph = rx.PyGraph()
+        all_qubits = set()
+        for qubits in assignments.values():
+            all_qubits.update(qubits)
+
+        graph.add_nodes_from(sorted(all_qubits))
+
+        # Connect qubits with different colors
+        colors = list(assignments.keys())
+        for i in range(len(colors)):
+            for j in range(i + 1, len(colors)):
+                for q1 in assignments[colors[i]]:
+                    for q2 in assignments[colors[j]]:
+                        graph.add_edge(q1, q2, None)
+
+        # Create instance and override the computed coloring
+        instance = cls(graph=graph)
+        instance.assignments = assignments
+        instance._qubit_to_color = {}
         for color, qubits in assignments.items():
             for qubit in qubits:
-                self._qubit_to_color[qubit] = color
+                instance._qubit_to_color[qubit] = color
+        instance._color_map = instance._qubit_to_color.copy()
 
-    def _validate(self):
-        """Validate color assignments."""
-        # Check for overlapping qubit assignments
-        assigned = set()
-        for color, qubits in self.assignments.items():
-            if not isinstance(qubits, list):
-                raise TypeError(f"Qubits for color {color} must be a list")
-            overlap = assigned.intersection(qubits)
-            if overlap:
-                raise ValueError(f"Qubits {overlap} assigned to multiple colors")
-            assigned.update(qubits)
+        return instance
 
     def get_color(self, qubit: int) -> Optional[int]:
         """Get color assigned to a qubit."""
@@ -252,3 +352,24 @@ class ColorAssignment:
     def n_colors(self) -> int:
         """Number of colors used in assignment."""
         return len(self.assignments)
+
+    def to_dict(self) -> Dict[int, int]:
+        """
+        Convert to qubit->color mapping dictionary.
+
+        Returns:
+            Dictionary mapping qubit indices to color values.
+        """
+        return self._color_map.copy()
+
+    def validate_coloring(self) -> bool:
+        """
+        Validate that the coloring is proper (no adjacent nodes have same color).
+
+        Returns:
+            True if coloring is valid, False otherwise.
+        """
+        for edge in self.graph.edge_list():
+            if self._color_map[edge[0]] == self._color_map[edge[1]]:
+                return False
+        return True
