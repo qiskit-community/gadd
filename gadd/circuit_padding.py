@@ -8,6 +8,7 @@ during idle periods, following the approach described in the GADD paper.
 from typing import List, Dict, Optional
 import numpy as np
 from qiskit import QuantumCircuit
+from qiskit.providers import BackendV2 as Backend
 from qiskit.circuit import Instruction, Gate, Delay
 from qiskit.circuit.library import IGate, RXGate, RYGate, RZGate
 from qiskit.transpiler import InstructionDurations, PassManager
@@ -54,21 +55,53 @@ class DDPulse:
 
 
 def get_instruction_duration(
-    instruction: Instruction, qubits: List[int], unit: str = "dt", dt: float = 1.0
+    instruction: Instruction,
+    qubits: List[int],
+    backend: Optional[Backend] = None,
+    unit: str = "dt",
+    dt: float = 0.222e-9,
 ) -> float:
     """
-    Get duration of an instruction.
+    Get duration of an instruction from backend or defaults.
 
     Args:
-        instruction: The instruction to get duration for
-        qubits: Qubits the instruction acts on
-        unit: Time unit ('dt' or 's')
-        dt: Duration of a single dt in seconds
+        instruction: The instruction to get duration for.
+        qubits: Qubits the instruction acts on.
+        backend: Backend to get durations from.
+        unit: Time unit ('dt' or 's').
+        dt: Duration of a single dt in seconds.
 
     Returns:
-        Duration in specified units
+        Duration in specified units.
     """
-    # Default durations in dt units (these should be calibrated for actual backend)
+    # Handle delay specially
+    if isinstance(instruction, Delay):
+        duration = instruction.duration
+        if instruction.unit == "dt":
+            return duration if unit == "dt" else duration * dt
+        else:  # assumes 's'
+            return duration / dt if unit == "dt" else duration
+
+    # Try to get from backend first
+    if backend is not None:
+        try:
+            if hasattr(backend, "instruction_durations"):
+                durations = backend.instruction_durations
+            else:
+                durations = InstructionDurations.from_backend(backend)
+
+            gate_name = instruction.name.lower()
+            if len(qubits) == 1:
+                duration_dt = durations.get(gate_name, qubits[0], "dt")
+            else:
+                duration_dt = durations.get(gate_name, qubits, "dt")
+
+            if duration_dt is not None:
+                return duration_dt if unit == "dt" else duration_dt * dt
+        except:
+            pass  # Fall back to defaults
+
+    # Default durations in dt units
     default_durations = {
         "id": 0,  # Identity is virtual
         "x": 160,  # Single-qubit gate
@@ -79,21 +112,16 @@ def get_instruction_duration(
         "rx": 160,
         "ry": 160,
         "rz": 0,  # RZ is virtual
+        "u1": 0,  # U1 is virtual
+        "u2": 160,
+        "u3": 160,
         "cx": 800,  # Two-qubit gate
         "cz": 800,
+        "ecr": 800,
         "measure": 4000,  # Measurement
-        "delay": None,  # Delay has variable duration
+        "reset": 1000,
     }
 
-    # Handle delay specially
-    if isinstance(instruction, Delay):
-        duration = instruction.duration
-        if instruction.unit == "dt":
-            return duration if unit == "dt" else duration * dt
-        else:  # assumes 's'
-            return duration / dt if unit == "dt" else duration
-
-    # Get duration for standard gates
     gate_name = instruction.name.lower()
     duration_dt = default_durations.get(gate_name, 160)  # Default single-qubit duration
 
@@ -107,6 +135,7 @@ def apply_dd_strategy(
     circuit: QuantumCircuit,
     strategy: DDStrategy,
     coloring: Dict[int, int],
+    backend: Optional["Backend"] = None,
     instruction_durations: Optional[InstructionDurations] = None,
     min_idle_duration: int = 64,
     staggered: bool = False,
@@ -118,6 +147,7 @@ def apply_dd_strategy(
         circuit: Original quantum circuit.
         strategy: DD strategy containing sequences for each color.
         coloring: Mapping from qubit to color.
+        backend: Optional backend for extracting instruction durations.
         instruction_durations: Backend-specific instruction durations.
         min_idle_duration: Minimum idle duration to insert DD.
         staggered: Whether to apply CR-aware staggering for crosstalk suppression.
@@ -134,7 +164,13 @@ def apply_dd_strategy(
 
     # Get default durations if not provided
     if instruction_durations is None:
-        instruction_durations = InstructionDurations()
+        if backend is not None:
+            try:
+                instruction_durations = InstructionDurations.from_backend(backend)
+            except:
+                instruction_durations = InstructionDurations()
+        else:
+            instruction_durations = InstructionDurations()
 
     # Get unique colors and sort them
     unique_colors = sorted(set(coloring.values()))
@@ -179,13 +215,17 @@ def apply_dd_strategy(
             continue
 
         # Convert sequence gates to Qiskit gates
+        # Include identity gates as Delay operations to maintain sequence structure
         dd_gates = []
         for gate_name in dd_sequence.gates:
-            if gate_name not in ["I", "Ip", "Im"]:  # Skip identity gates
-                pulse = DDPulse(gate_name, 0, 0)  # Qubit and time don't matter here
-                dd_gates.append(pulse.to_gate())
+            pulse = DDPulse(gate_name, 0, 0)  # Qubit and time don't matter here
+            dd_gates.append(pulse.to_gate())
 
-        if not dd_gates:
+        if not dd_gates or len(dd_gates) % 2 == 1:
+            # Skip sequences that don't have even number of gates
+            print(
+                f"Warning: Skipping DD sequence for color {color} - odd number of gates ({len(dd_gates)})"
+            )
             continue
 
         # Get spacing for this color if staggered

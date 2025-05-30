@@ -96,6 +96,22 @@ class TrainingConfig:
             data["decoupling_group"] = DecouplingGroup(**group_data)
         return cls(**data)
 
+    def __str__(self) -> str:
+        """Return human-readable string representation."""
+        lines = [
+            "GADD Training Configuration:",
+            f"  Population size: {self.pop_size}",
+            f"  Sequence length: {self.sequence_length}",
+            f"  Iterations: {self.n_iterations}",
+            f"  Colors: {self.num_colors}",
+            f"  Shots per evaluation: {self.shots}",
+            f"  Mutation probability: {self.mutation_probability}",
+            f"  Mode: {self.mode}",
+        ]
+        if self.dynamic_mutation:
+            lines.append(f"  Dynamic mutation: enabled (decay={self.mutation_decay})")
+        return "\n".join(lines)
+
 
 @dataclass
 class TrainingState:
@@ -134,6 +150,34 @@ class TrainingResult:
         result_dict["best_sequence"] = self.best_sequence.to_dict()
         result_dict["config"] = self.config.to_dict()
         return result_dict
+
+    def __str__(self) -> str:
+        """Return human-readable string representation."""
+        lines = [
+            "GADD Training Results:",
+            f"  Best score: {self.best_score:.4f}",
+            f"  Training time: {self.training_time:.1f}s",
+            f"  Iterations completed: {len(self.iteration_data)}",
+        ]
+
+        if self.iteration_data:
+            first_score = self.iteration_data[0]["best_score"]
+            improvement = self.best_score - first_score
+            lines.append(f"  Score improvement: +{improvement:.4f}")
+
+        if self.comparison_data:
+            lines.append(
+                f"  Compared against {len(self.comparison_data)} standard sequences"
+            )
+            best_standard = max(self.comparison_data.values())
+            advantage = self.best_score - best_standard
+            if advantage > 0:
+                lines.append(f"  Advantage over best standard: +{advantage:.4f}")
+
+        lines.append(f"\nBest sequence found:")
+        lines.append(f"  {self.best_sequence}")
+
+        return "\n".join(lines)
 
 
 class GADD:
@@ -240,6 +284,8 @@ class GADD:
         # Use provided backend or fall back to instance backend
         backend = backend or self._backend
 
+        print("strategy", strategy)
+
         # Get coloring for the circuit
         if self._coloring is not None:
             coloring_dict = self._coloring.to_dict()
@@ -254,7 +300,10 @@ class GADD:
         instruction_durations = None
         if backend:
             try:
-                instruction_durations = InstructionDurations.from_backend(backend)
+                if hasattr(backend, "instruction_durations"):
+                    instruction_durations = backend.instruction_durations
+                else:
+                    instruction_durations = InstructionDurations.from_backend(backend)
             except:
                 pass
 
@@ -263,6 +312,7 @@ class GADD:
             target_circuit,
             strategy,
             coloring_dict,
+            backend=backend,
             instruction_durations=instruction_durations,
             staggered=staggered,
         )

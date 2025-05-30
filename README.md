@@ -9,15 +9,6 @@
 
 **GADD** is a Python package for empirically optimizing dynamical decoupling (DD) sequences on quantum processors using a genetic algorithm as described in the research paper ["Empirical learning of dynamical decoupling on quantum processors"](https://arxiv.org/abs/2403.02294).
 
-## Key Features
-
-- **Empirical Optimization**: Learn DD sequences directly from quantum hardware feedback
-- **Hardware Agnostic**: Works with any quantum backend that supports Qiskit
-- **Genetic Algorithm**: Efficient search through large DD sequence spaces
-- **Multiple Utility Functions**: Built-in metrics for various quantum applications
-- **Comparative Analysis**: Benchmark against standard DD sequences (XY4, CPMG, EDD, URDD)
-- **Comprehensive Results**: Detailed training progression and performance analytics
-
 ## Installation
 
 ### Requirements
@@ -29,6 +20,8 @@ This package is designed to be used with [Qiskit](https://github.com/Qiskit/qisk
 ```bash
 pip install gadd
 ```
+
+To install optional dependencies for developing the package and building documentation, run `pip install gadd[dev]` and `pip install gadd[docs]` respectively.
 
 ### Install from Source
 

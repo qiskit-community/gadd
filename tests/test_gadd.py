@@ -18,7 +18,7 @@ class TestGADD(unittest.TestCase):
 
     def setUp(self):
         """Set up test fixtures."""
-        self.backend = MockBackend(num_qubits=5)
+        self.backend = MockBackend()
         self.config = TrainingConfig(
             pop_size=4, sequence_length=4, n_iterations=2, shots=1000
         )
@@ -218,7 +218,7 @@ class TestGADDTraining(unittest.TestCase):
 
     def setUp(self):
         """Set up test fixtures."""
-        self.backend = MockBackend(num_qubits=3)
+        self.backend = MockBackend()
         self.config = TrainingConfig(
             pop_size=4, sequence_length=4, n_iterations=2, shots=1000
         )
@@ -387,14 +387,14 @@ class TestTrainingConfig(unittest.TestCase):
         self.assertEqual(config.pop_size, 16)
         self.assertEqual(config.sequence_length, 8)
         self.assertEqual(config.n_iterations, 20)
-        self.assertEqual(config.mode, "random")
+        self.assertEqual(config.mode, "uniform")
 
     def test_custom_values(self):
         """Test custom configuration values."""
-        config = TrainingConfig(pop_size=32, sequence_length=16, mode="uniform")
+        config = TrainingConfig(pop_size=32, sequence_length=16, mode="random")
         self.assertEqual(config.pop_size, 32)
         self.assertEqual(config.sequence_length, 16)
-        self.assertEqual(config.mode, "uniform")
+        self.assertEqual(config.mode, "random")
 
     def test_serialization(self):
         """Test to_dict and from_dict methods."""

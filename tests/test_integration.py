@@ -17,7 +17,7 @@ class TestIntegration(unittest.TestCase):
 
     def setUp(self):
         """Set up test fixtures."""
-        self.backend = MockBackend(num_qubits=5)
+        self.backend = MockBackend()
         self.sampler = MockSampler()
 
     def test_basic_training_example(self):

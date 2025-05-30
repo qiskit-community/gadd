@@ -148,6 +148,10 @@ class SuccessProbability(UtilityFunction):
     def get_name(self) -> str:
         return f"Success Probability (|{self._target}⟩)"
 
+    def __str__(self) -> str:
+        """Return human-readable string representation."""
+        return f"Success probability for |{self._target}⟩"
+
 
 class OneNormDistance(UtilityFunction):
     """Utility function based on 1-norm distance to ideal distribution."""
@@ -190,6 +194,17 @@ class OneNormDistance(UtilityFunction):
     def get_name(self) -> str:
         return "1-Norm Distance"
 
+    def __str__(self) -> str:
+        """Return human-readable string representation."""
+        ideal_states = [
+            state for state, prob in self.ideal_distribution.items() if prob > 0.01
+        ]
+        if len(ideal_states) <= 3:
+            states_str = ", ".join(f"|{state}⟩" for state in ideal_states)
+        else:
+            states_str = f"{len(ideal_states)} target states"
+        return f"1-norm fidelity to {states_str}"
+
 
 class GHZUtility(OneNormDistance):
     """Specialized utility function for GHZ states."""
@@ -208,6 +223,11 @@ class GHZUtility(OneNormDistance):
 
     def get_name(self) -> str:
         return "GHZ State Fidelity"
+
+    def __str__(self) -> str:
+        """Return human-readable string representation."""
+        n_qubits = len(next(iter(self.ideal_distribution.keys())))
+        return f"GHZ state fidelity ({n_qubits} qubits)"
 
 
 class CustomUtility(UtilityFunction):
@@ -233,6 +253,10 @@ class CustomUtility(UtilityFunction):
 
     def get_name(self) -> str:
         return self._name
+
+    def __str__(self) -> str:
+        """Return human-readable string representation."""
+        return f"Custom Utility {self._name}"
 
 
 class UtilityFactory:

@@ -3,7 +3,7 @@
 import unittest
 from qiskit import QuantumCircuit
 from qiskit.circuit import Delay
-from qiskit.circuit.library import XGate, ZGate, CXGate
+from qiskit.circuit.library import XGate, YGate, ZGate, CXGate, RXGate, RYGate, RZGate
 
 from gadd.circuit_padding import (
     DDPulse,
@@ -11,6 +11,7 @@ from gadd.circuit_padding import (
     apply_dd_strategy,
 )
 from gadd.strategies import DDSequence, DDStrategy
+from .fixtures import MockBackend
 
 
 class TestDDPulse(unittest.TestCase):
@@ -22,6 +23,38 @@ class TestDDPulse(unittest.TestCase):
         self.assertEqual(pulse.gate_name, "X")
         self.assertEqual(pulse.qubit, 0)
         self.assertEqual(pulse.time, 100.0)
+
+    def test_to_gate_all_gates(self):
+        """Test conversion for all supported gates."""
+        # Test all supported gate types
+        gate_tests = [
+            ("I", "id"),
+            ("Ip", "id"),
+            ("Im", "id"),
+            ("X", "rx"),
+            ("Xp", "rx"),
+            ("Xm", "rx"),
+            ("Y", "ry"),
+            ("Yp", "ry"),
+            ("Ym", "ry"),
+            ("Z", "rz"),
+            ("Zp", "rz"),
+            ("Zm", "rz"),
+        ]
+
+        for gate_name, expected_type in gate_tests:
+            pulse = DDPulse(gate_name, 0, 0)
+            gate = pulse.to_gate()
+            self.assertIsNotNone(gate)
+            # Check gate type
+            if expected_type == "id":
+                self.assertEqual(gate.name, "id")
+            elif expected_type == "rx":
+                self.assertIsInstance(gate, RXGate)
+            elif expected_type == "ry":
+                self.assertIsInstance(gate, RYGate)
+            elif expected_type == "rz":
+                self.assertIsInstance(gate, RZGate)
 
     def test_to_gate_invalid(self):
         """Test conversion fails for invalid gate."""
@@ -50,6 +83,31 @@ class TestInstructionDuration(unittest.TestCase):
         cx_gate = CXGate()
         duration = get_instruction_duration(cx_gate, [0, 1], unit="dt")
         self.assertEqual(duration, 800)  # Default CX gate duration
+
+    def test_additional_gates(self):
+        """Test duration for additional gate types."""
+        # Test Y gate
+        y_gate = YGate()
+        duration = get_instruction_duration(y_gate, [0], unit="dt")
+        self.assertEqual(duration, 160)
+
+        # Test Z gate (virtual)
+        z_gate = ZGate()
+        duration = get_instruction_duration(z_gate, [0], unit="dt")
+        self.assertEqual(duration, 0)
+
+        # Test RX, RY, RZ gates
+        rx_gate = RXGate(3.14)
+        duration = get_instruction_duration(rx_gate, [0], unit="dt")
+        self.assertEqual(duration, 160)
+
+        ry_gate = RYGate(3.14)
+        duration = get_instruction_duration(ry_gate, [0], unit="dt")
+        self.assertEqual(duration, 160)
+
+        rz_gate = RZGate(3.14)
+        duration = get_instruction_duration(rz_gate, [0], unit="dt")
+        self.assertEqual(duration, 0)  # RZ is virtual
 
     def test_delay_instruction(self):
         """Test delay instruction duration."""
@@ -81,6 +139,8 @@ class TestCircuitPadding(unittest.TestCase):
         self.qc.x(0)
         self.qc.cx(0, 1)
 
+        self.backend = MockBackend()
+
         # Test DD sequence
         self.dd_seq = DDSequence(["X", "Y", "X", "Y"])
 
@@ -90,7 +150,7 @@ class TestCircuitPadding(unittest.TestCase):
     def test_apply_dd_strategy(self):
         """Test applying full DD strategy."""
         strategy = DDStrategy.from_single_sequence(self.dd_seq)
-        padded = apply_dd_strategy(self.qc, strategy, self.coloring)
+        padded = apply_dd_strategy(self.qc, strategy, self.coloring, self.backend)
 
         # Check circuit properties
         self.assertIsInstance(padded, QuantumCircuit)
@@ -98,6 +158,95 @@ class TestCircuitPadding(unittest.TestCase):
 
         # Check naming
         self.assertIn("DD", padded.name)
+
+    def test_apply_dd_strategy_with_backend(self):
+        """Test applying DD strategy with backend."""
+
+        backend = MockBackend()
+        strategy = DDStrategy.from_single_sequence(self.dd_seq)
+
+        # Test with backend-provided instruction durations
+        padded = apply_dd_strategy(self.qc, strategy, self.coloring, backend=backend)
+        self.assertIsInstance(padded, QuantumCircuit)
+
+    def test_apply_dd_strategy_with_custom_durations(self):
+        """Test applying DD strategy with custom instruction durations."""
+        # Create custom durations
+        durations = InstructionDurations(
+            [
+                ("x", 0, 200),
+                ("y", 0, 200),
+                ("cx", [0, 1], 1000),
+            ]
+        )
+
+        strategy = DDStrategy.from_single_sequence(self.dd_seq)
+        padded = apply_dd_strategy(
+            self.qc, strategy, self.coloring, instruction_durations=durations
+        )
+        self.assertIsInstance(padded, QuantumCircuit)
+
+    def test_apply_dd_strategy_staggered(self):
+        """Test applying staggered DD strategy."""
+        # Create circuit with multiple colors
+        qc = QuantumCircuit(3)
+        qc.cx(0, 1)
+        qc.cx(1, 2)
+
+        # Three-color assignment
+        coloring = {0: 0, 1: 1, 2: 2}
+
+        # Create strategy with different sequences per color
+        seq1 = DDSequence(["X", "X"])
+        seq2 = DDSequence(["Y", "Y"])
+        seq3 = DDSequence(["X", "Y", "X", "Y"])
+        strategy = DDStrategy([seq1, seq2, seq3])
+
+        padded = apply_dd_strategy(qc, strategy, coloring, staggered=True)
+        self.assertIsInstance(padded, QuantumCircuit)
+        self.assertIn("staggered", padded.name)
+
+    def test_apply_dd_strategy_missing_color(self):
+        """Test handling missing color in strategy."""
+        # Strategy only has sequence for color 0
+        strategy = DDStrategy({0: self.dd_seq})
+
+        # But coloring has colors 0 and 1
+        coloring = {0: 0, 1: 1}
+
+        # Should still work, just skip color 1
+        padded = apply_dd_strategy(self.qc, strategy, coloring)
+        self.assertIsInstance(padded, QuantumCircuit)
+
+    def test_apply_dd_strategy_odd_sequence(self):
+        """Test handling odd-length sequences."""
+        # Create odd-length sequence
+        odd_seq = DDSequence(["X", "Y", "X"])
+        strategy = DDStrategy.from_single_sequence(odd_seq)
+
+        # Should print warning and skip
+        import io
+        import sys
+
+        captured_output = io.StringIO()
+        sys.stdout = captured_output
+
+        padded = apply_dd_strategy(self.qc, strategy, self.coloring)
+
+        sys.stdout = sys.__stdout__
+        output = captured_output.getvalue()
+
+        self.assertIn("Warning", output)
+        self.assertIn("odd number of gates", output)
+
+    def test_apply_dd_strategy_identity_only(self):
+        """Test sequence with only identity gates."""
+        # Create sequence with only identity gates
+        id_seq = DDSequence(["I", "I"])
+        strategy = DDStrategy.from_single_sequence(id_seq)
+
+        padded = apply_dd_strategy(self.qc, strategy, self.coloring)
+        self.assertIsInstance(padded, QuantumCircuit)
 
     def test_multi_color_strategy(self):
         """Test strategy with multiple colors."""

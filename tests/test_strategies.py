@@ -1,14 +1,16 @@
 """Test DD strategies."""
 
 import unittest
-from gadd.strategies import DDSequence, StandardSequences, ColorAssignment, DDStrategy
+
 import rustworkx as rx
 from qiskit import QuantumCircuit
+
+from gadd.strategies import DDSequence, StandardSequences, ColorAssignment, DDStrategy
 from .fixtures import MockBackend
 
 
 class TestDDSequence(unittest.TestCase):
-    """Test DDSequence class."""
+    """Test the DDSequence class."""
 
     def test_init_valid(self):
         """Test valid initialization."""
@@ -16,6 +18,7 @@ class TestDDSequence(unittest.TestCase):
         self.assertEqual(len(seq), 4)
         self.assertEqual(seq[0], "X")
         self.assertEqual(seq.gates, ["X", "Y", "X", "Y"])
+        self.assertEqual(str(seq), "X-Y-X-Y")
 
     def test_init_invalid_type(self):
         """Test initialization with invalid types."""
@@ -78,6 +81,10 @@ class TestDDSequence(unittest.TestCase):
         indices = seq.to_indices()
         self.assertEqual(indices, [2, 4, 3, 4])  # Xp=2, Yp=4, Xm=3
 
+
+class TestDDStrategy(unittest.TestCase):
+    """Test the DDStrategy class."""
+
     def test_dd_strategy_init_dict(self):
         """Test DDStrategy initialization with dictionary."""
         seq1 = DDSequence(["X", "Y"])
@@ -88,6 +95,9 @@ class TestDDSequence(unittest.TestCase):
         self.assertEqual(len(strategy), 2)
         self.assertEqual(strategy.get_sequence(0), seq1)
         self.assertEqual(strategy.get_sequence(2), seq2)
+        self.assertEqual(
+            str(strategy), "DD Strategy (2 colors):\n  Color 0: X-Y\n  Color 2: Y-X"
+        )
 
     def test_dd_strategy_validation(self):
         """Test DDStrategy validation."""
@@ -199,24 +209,30 @@ class TestStandardSequences(unittest.TestCase):
 
 
 class TestColorAssignment(unittest.TestCase):
+    """Test the ColorAssignment class."""
+
     def test_color_assignment_from_backend(self):
         """Test ColorAssignment from backend."""
 
-        backend = MockBackend(num_qubits=5)
+        backend = MockBackend()
         colors = ColorAssignment(backend=backend)
 
-        # Should have created a coloring
-        self.assertGreater(colors.n_colors, 0)
-        self.assertLessEqual(colors.n_colors, 5)
+        self.assertEqual(colors.n_colors, 2)
 
         # All qubits should be colored
         all_colored_qubits = set()
         for color in range(colors.n_colors):
             all_colored_qubits.update(colors.get_qubits(color))
-        self.assertEqual(len(all_colored_qubits), 5)
+        self.assertEqual(len(all_colored_qubits), 127)
 
         # Validate coloring
         self.assertTrue(colors.validate_coloring())
+        expected_lines = [
+            "Qubit Coloring (2 colors):",
+            "  Color 0: [0,2,4,6,8,10,12,18,20,22,24,26,28,30,32,37,39,41,43,45,47,49,51,56,58,60,62,64,66,68,70,75,77,79,81,83,85,87,89,94,96,98,100,102,104,106,108,114,116,118,120,122,124,126]",
+            "  Color 1: [1,3,5,7,9,11,13-17,19,21,23,25,27,29,31,33-36,38,40,42,44,46,48,50,52-55,57,59,61,63,65,67,69,71-74,76,78,80,82,84,86,88,90-93,95,97,99,101,103,105,107,109-113,115,117,119,121,123,125]",
+        ]
+        self.assertEqual(str(colors), "\n".join(expected_lines))
 
     def test_color_assignment_from_circuit(self):
         """Test ColorAssignment from circuit structure."""
@@ -227,6 +243,10 @@ class TestColorAssignment(unittest.TestCase):
         qc.cx(2, 3)
 
         colors = ColorAssignment.from_circuit(qc)
+        self.assertEqual(
+            str(colors),
+            "Qubit Coloring (2 colors):\n  Color 0: [1, 3]\n  Color 1: [0, 2]",
+        )
 
         # Linear chain should need at most 2 colors
         self.assertLessEqual(colors.n_colors, 2)
@@ -279,6 +299,8 @@ class TestColorAssignment(unittest.TestCase):
 
 
 class TestHelperFunctions(unittest.TestCase):
+    """Test helper functions in strategies.py."""
+
     def test_create_gate_functions(self):
         """Test the gate creation helper functions."""
         from gadd.strategies import create_xb_gate, create_yb_gate

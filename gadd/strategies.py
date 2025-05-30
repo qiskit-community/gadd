@@ -77,6 +77,9 @@ class DDSequence:
             if gate not in valid_gates:
                 raise ValueError(f"Invalid gate: {gate}. Must be one of {valid_gates}")
 
+    def __str__(self) -> str:
+        return "-".join(self.gates)
+
     def __len__(self):
         return len(self.gates)
 
@@ -211,6 +214,19 @@ class DDStrategy:
     def __len__(self) -> int:
         return len(self.sequences)
 
+    def __str__(self) -> str:
+        if len(self.sequences) == 1:
+            # Single sequence case
+            seq = next(iter(self.sequences.values()))
+            return f"DD Strategy: {seq}"
+        else:
+            # Multi-color case
+            lines = [f"DD Strategy ({len(self.sequences)} colors):"]
+            for color in sorted(self.sequences.keys()):
+                seq = self.sequences[color]
+                lines.append(f"  Color {color}: {seq}")
+            return "\n".join(lines)
+
     def to_dict(self) -> Dict[str, any]:
         """Convert strategy to dictionary for serialization."""
         return {
@@ -270,6 +286,51 @@ class ColorAssignment:
 
         # Create reverse mapping for efficiency
         self._qubit_to_color = self._color_map.copy()
+
+    def __str__(self) -> str:
+        """Return human-readable string representation."""
+        lines = [f"Qubit Coloring ({self.n_colors} colors):"]
+        for color in sorted(self.assignments.keys()):
+            qubits = self.assignments[color]
+            qubit_ranges = self._format_qubit_ranges(qubits)
+            lines.append(f"  Color {color}: {qubit_ranges}")
+        return "\n".join(lines)
+
+    def _format_qubit_ranges(self, qubits: List[int]) -> str:
+        """Format qubit list as ranges where possible."""
+        if not qubits:
+            return "[]"
+
+        sorted_qubits = sorted(qubits)
+        if len(sorted_qubits) <= 3:
+            return str(sorted_qubits)
+
+        # Try to find consecutive ranges
+        ranges = []
+        start = sorted_qubits[0]
+        end = start
+
+        for i in range(1, len(sorted_qubits)):
+            if sorted_qubits[i] == end + 1:
+                end = sorted_qubits[i]
+            else:
+                if end == start:
+                    ranges.append(str(start))
+                elif end == start + 1:
+                    ranges.append(f"{start},{end}")
+                else:
+                    ranges.append(f"{start}-{end}")
+                start = end = sorted_qubits[i]
+
+        # Add final range
+        if end == start:
+            ranges.append(str(start))
+        elif end == start + 1:
+            ranges.append(f"{start},{end}")
+        else:
+            ranges.append(f"{start}-{end}")
+
+        return "[" + ",".join(ranges) + "]"
 
     @classmethod
     def from_circuit(cls, circuit: QuantumCircuit) -> "ColorAssignment":
