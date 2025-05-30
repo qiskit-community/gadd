@@ -243,6 +243,7 @@
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Optional</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">from</span> <span class="nn">qiskit</span> <span class="kn">import</span> <span class="n">QuantumCircuit</span>
+<span class="kn">from</span> <span class="nn">qiskit.providers</span> <span class="kn">import</span> <span class="n">BackendV2</span> <span class="k">as</span> <span class="n">Backend</span>
 <span class="kn">from</span> <span class="nn">qiskit.circuit</span> <span class="kn">import</span> <span class="n">Instruction</span><span class="p">,</span> <span class="n">Gate</span><span class="p">,</span> <span class="n">Delay</span>
 <span class="kn">from</span> <span class="nn">qiskit.circuit.library</span> <span class="kn">import</span> <span class="n">IGate</span><span class="p">,</span> <span class="n">RXGate</span><span class="p">,</span> <span class="n">RYGate</span><span class="p">,</span> <span class="n">RZGate</span>
 <span class="kn">from</span> <span class="nn">qiskit.transpiler</span> <span class="kn">import</span> <span class="n">InstructionDurations</span><span class="p">,</span> <span class="n">PassManager</span>
@@ -300,21 +301,53 @@
 <div class="viewcode-block" id="get_instruction_duration">
 <a class="viewcode-back" href="../../api/circuit_padding.html#gadd.circuit_padding.get_instruction_duration">[docs]</a>
 <span class="k">def</span> <span class="nf">get_instruction_duration</span><span class="p">(</span>
-    <span class="n">instruction</span><span class="p">:</span> <span class="n">Instruction</span><span class="p">,</span> <span class="n">qubits</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span> <span class="n">unit</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;dt&quot;</span><span class="p">,</span> <span class="n">dt</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span>
+    <span class="n">instruction</span><span class="p">:</span> <span class="n">Instruction</span><span class="p">,</span>
+    <span class="n">qubits</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span>
+    <span class="n">backend</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Backend</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">unit</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;dt&quot;</span><span class="p">,</span>
+    <span class="n">dt</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.222e-9</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Get duration of an instruction.</span>
+<span class="sd">    Get duration of an instruction from backend or defaults.</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        instruction: The instruction to get duration for</span>
-<span class="sd">        qubits: Qubits the instruction acts on</span>
-<span class="sd">        unit: Time unit (&#39;dt&#39; or &#39;s&#39;)</span>
-<span class="sd">        dt: Duration of a single dt in seconds</span>
+<span class="sd">        instruction: The instruction to get duration for.</span>
+<span class="sd">        qubits: Qubits the instruction acts on.</span>
+<span class="sd">        backend: Backend to get durations from.</span>
+<span class="sd">        unit: Time unit (&#39;dt&#39; or &#39;s&#39;).</span>
+<span class="sd">        dt: Duration of a single dt in seconds.</span>
 
 <span class="sd">    Returns:</span>
-<span class="sd">        Duration in specified units</span>
+<span class="sd">        Duration in specified units.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="c1"># Default durations in dt units (these should be calibrated for actual backend)</span>
+    <span class="c1"># Handle delay specially</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">instruction</span><span class="p">,</span> <span class="n">Delay</span><span class="p">):</span>
+        <span class="n">duration</span> <span class="o">=</span> <span class="n">instruction</span><span class="o">.</span><span class="n">duration</span>
+        <span class="k">if</span> <span class="n">instruction</span><span class="o">.</span><span class="n">unit</span> <span class="o">==</span> <span class="s2">&quot;dt&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">duration</span> <span class="k">if</span> <span class="n">unit</span> <span class="o">==</span> <span class="s2">&quot;dt&quot;</span> <span class="k">else</span> <span class="n">duration</span> <span class="o">*</span> <span class="n">dt</span>
+        <span class="k">else</span><span class="p">:</span>  <span class="c1"># assumes &#39;s&#39;</span>
+            <span class="k">return</span> <span class="n">duration</span> <span class="o">/</span> <span class="n">dt</span> <span class="k">if</span> <span class="n">unit</span> <span class="o">==</span> <span class="s2">&quot;dt&quot;</span> <span class="k">else</span> <span class="n">duration</span>
+
+    <span class="c1"># Try to get from backend first</span>
+    <span class="k">if</span> <span class="n">backend</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">backend</span><span class="p">,</span> <span class="s2">&quot;instruction_durations&quot;</span><span class="p">):</span>
+                <span class="n">durations</span> <span class="o">=</span> <span class="n">backend</span><span class="o">.</span><span class="n">instruction_durations</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">durations</span> <span class="o">=</span> <span class="n">InstructionDurations</span><span class="o">.</span><span class="n">from_backend</span><span class="p">(</span><span class="n">backend</span><span class="p">)</span>
+
+            <span class="n">gate_name</span> <span class="o">=</span> <span class="n">instruction</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">qubits</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">duration_dt</span> <span class="o">=</span> <span class="n">durations</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">gate_name</span><span class="p">,</span> <span class="n">qubits</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="s2">&quot;dt&quot;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">duration_dt</span> <span class="o">=</span> <span class="n">durations</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">gate_name</span><span class="p">,</span> <span class="n">qubits</span><span class="p">,</span> <span class="s2">&quot;dt&quot;</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">duration_dt</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">duration_dt</span> <span class="k">if</span> <span class="n">unit</span> <span class="o">==</span> <span class="s2">&quot;dt&quot;</span> <span class="k">else</span> <span class="n">duration_dt</span> <span class="o">*</span> <span class="n">dt</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="k">pass</span>  <span class="c1"># Fall back to defaults</span>
+
+    <span class="c1"># Default durations in dt units</span>
     <span class="n">default_durations</span> <span class="o">=</span> <span class="p">{</span>
         <span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>  <span class="c1"># Identity is virtual</span>
         <span class="s2">&quot;x&quot;</span><span class="p">:</span> <span class="mi">160</span><span class="p">,</span>  <span class="c1"># Single-qubit gate</span>
@@ -325,21 +358,16 @@
         <span class="s2">&quot;rx&quot;</span><span class="p">:</span> <span class="mi">160</span><span class="p">,</span>
         <span class="s2">&quot;ry&quot;</span><span class="p">:</span> <span class="mi">160</span><span class="p">,</span>
         <span class="s2">&quot;rz&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>  <span class="c1"># RZ is virtual</span>
+        <span class="s2">&quot;u1&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>  <span class="c1"># U1 is virtual</span>
+        <span class="s2">&quot;u2&quot;</span><span class="p">:</span> <span class="mi">160</span><span class="p">,</span>
+        <span class="s2">&quot;u3&quot;</span><span class="p">:</span> <span class="mi">160</span><span class="p">,</span>
         <span class="s2">&quot;cx&quot;</span><span class="p">:</span> <span class="mi">800</span><span class="p">,</span>  <span class="c1"># Two-qubit gate</span>
         <span class="s2">&quot;cz&quot;</span><span class="p">:</span> <span class="mi">800</span><span class="p">,</span>
+        <span class="s2">&quot;ecr&quot;</span><span class="p">:</span> <span class="mi">800</span><span class="p">,</span>
         <span class="s2">&quot;measure&quot;</span><span class="p">:</span> <span class="mi">4000</span><span class="p">,</span>  <span class="c1"># Measurement</span>
-        <span class="s2">&quot;delay&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>  <span class="c1"># Delay has variable duration</span>
+        <span class="s2">&quot;reset&quot;</span><span class="p">:</span> <span class="mi">1000</span><span class="p">,</span>
     <span class="p">}</span>
 
-    <span class="c1"># Handle delay specially</span>
-    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">instruction</span><span class="p">,</span> <span class="n">Delay</span><span class="p">):</span>
-        <span class="n">duration</span> <span class="o">=</span> <span class="n">instruction</span><span class="o">.</span><span class="n">duration</span>
-        <span class="k">if</span> <span class="n">instruction</span><span class="o">.</span><span class="n">unit</span> <span class="o">==</span> <span class="s2">&quot;dt&quot;</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">duration</span> <span class="k">if</span> <span class="n">unit</span> <span class="o">==</span> <span class="s2">&quot;dt&quot;</span> <span class="k">else</span> <span class="n">duration</span> <span class="o">*</span> <span class="n">dt</span>
-        <span class="k">else</span><span class="p">:</span>  <span class="c1"># assumes &#39;s&#39;</span>
-            <span class="k">return</span> <span class="n">duration</span> <span class="o">/</span> <span class="n">dt</span> <span class="k">if</span> <span class="n">unit</span> <span class="o">==</span> <span class="s2">&quot;dt&quot;</span> <span class="k">else</span> <span class="n">duration</span>
-
-    <span class="c1"># Get duration for standard gates</span>
     <span class="n">gate_name</span> <span class="o">=</span> <span class="n">instruction</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
     <span class="n">duration_dt</span> <span class="o">=</span> <span class="n">default_durations</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">gate_name</span><span class="p">,</span> <span class="mi">160</span><span class="p">)</span>  <span class="c1"># Default single-qubit duration</span>
 
@@ -356,6 +384,7 @@
     <span class="n">circuit</span><span class="p">:</span> <span class="n">QuantumCircuit</span><span class="p">,</span>
     <span class="n">strategy</span><span class="p">:</span> <span class="n">DDStrategy</span><span class="p">,</span>
     <span class="n">coloring</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span>
+    <span class="n">backend</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="s2">&quot;Backend&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">instruction_durations</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">InstructionDurations</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">min_idle_duration</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">64</span><span class="p">,</span>
     <span class="n">staggered</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
@@ -367,6 +396,7 @@
 <span class="sd">        circuit: Original quantum circuit.</span>
 <span class="sd">        strategy: DD strategy containing sequences for each color.</span>
 <span class="sd">        coloring: Mapping from qubit to color.</span>
+<span class="sd">        backend: Optional backend for extracting instruction durations.</span>
 <span class="sd">        instruction_durations: Backend-specific instruction durations.</span>
 <span class="sd">        min_idle_duration: Minimum idle duration to insert DD.</span>
 <span class="sd">        staggered: Whether to apply CR-aware staggering for crosstalk suppression.</span>
@@ -383,7 +413,13 @@
 
     <span class="c1"># Get default durations if not provided</span>
     <span class="k">if</span> <span class="n">instruction_durations</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">instruction_durations</span> <span class="o">=</span> <span class="n">InstructionDurations</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">backend</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">instruction_durations</span> <span class="o">=</span> <span class="n">InstructionDurations</span><span class="o">.</span><span class="n">from_backend</span><span class="p">(</span><span class="n">backend</span><span class="p">)</span>
+            <span class="k">except</span><span class="p">:</span>
+                <span class="n">instruction_durations</span> <span class="o">=</span> <span class="n">InstructionDurations</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">instruction_durations</span> <span class="o">=</span> <span class="n">InstructionDurations</span><span class="p">()</span>
 
     <span class="c1"># Get unique colors and sort them</span>
     <span class="n">unique_colors</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">coloring</span><span class="o">.</span><span class="n">values</span><span class="p">()))</span>
@@ -428,13 +464,17 @@
             <span class="k">continue</span>
 
         <span class="c1"># Convert sequence gates to Qiskit gates</span>
+        <span class="c1"># Include identity gates as Delay operations to maintain sequence structure</span>
         <span class="n">dd_gates</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">gate_name</span> <span class="ow">in</span> <span class="n">dd_sequence</span><span class="o">.</span><span class="n">gates</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">gate_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;I&quot;</span><span class="p">,</span> <span class="s2">&quot;Ip&quot;</span><span class="p">,</span> <span class="s2">&quot;Im&quot;</span><span class="p">]:</span>  <span class="c1"># Skip identity gates</span>
-                <span class="n">pulse</span> <span class="o">=</span> <span class="n">DDPulse</span><span class="p">(</span><span class="n">gate_name</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>  <span class="c1"># Qubit and time don&#39;t matter here</span>
-                <span class="n">dd_gates</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">pulse</span><span class="o">.</span><span class="n">to_gate</span><span class="p">())</span>
+            <span class="n">pulse</span> <span class="o">=</span> <span class="n">DDPulse</span><span class="p">(</span><span class="n">gate_name</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>  <span class="c1"># Qubit and time don&#39;t matter here</span>
+            <span class="n">dd_gates</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">pulse</span><span class="o">.</span><span class="n">to_gate</span><span class="p">())</span>
 
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">dd_gates</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">dd_gates</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">dd_gates</span><span class="p">)</span> <span class="o">%</span> <span class="mi">2</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="c1"># Skip sequences that don&#39;t have even number of gates</span>
+            <span class="nb">print</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Warning: Skipping DD sequence for color </span><span class="si">{</span><span class="n">color</span><span class="si">}</span><span class="s2"> - odd number of gates (</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">dd_gates</span><span class="p">)</span><span class="si">}</span><span class="s2">)&quot;</span>
+            <span class="p">)</span>
             <span class="k">continue</span>
 
         <span class="c1"># Get spacing for this color if staggered</span>

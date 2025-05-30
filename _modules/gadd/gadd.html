@@ -254,7 +254,11 @@
 <span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
 
 <span class="kn">from</span> <span class="nn">.strategies</span> <span class="kn">import</span> <span class="n">DDStrategy</span><span class="p">,</span> <span class="n">DDSequence</span><span class="p">,</span> <span class="n">StandardSequences</span><span class="p">,</span> <span class="n">ColorAssignment</span>
-<span class="kn">from</span> <span class="nn">.group_operations</span> <span class="kn">import</span> <span class="n">complete_sequence_to_identity</span>
+<span class="kn">from</span> <span class="nn">.group_operations</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">complete_sequence_to_identity</span><span class="p">,</span>
+    <span class="n">DecouplingGroup</span><span class="p">,</span>
+    <span class="n">DEFAULT_GROUP</span><span class="p">,</span>
+<span class="p">)</span>
 <span class="kn">from</span> <span class="nn">.circuit_padding</span> <span class="kn">import</span> <span class="n">apply_dd_strategy</span> <span class="k">as</span> <span class="n">_apply_dd_strategy</span>
 <span class="kn">from</span> <span class="nn">.utility_functions</span> <span class="kn">import</span> <span class="n">UtilityFunction</span><span class="p">,</span> <span class="n">SuccessProbability</span>
 
@@ -268,42 +272,90 @@
 <span class="sd">    Args:</span>
 <span class="sd">        pop_size (int): Size of the population (``K`` in the paper).</span>
 <span class="sd">        sequence_length (int): Length of each DD sequence (``L`` in the paper).</span>
-<span class="sd">        parent_fraction (float): Fraction of population to use as parents for reproduction.</span>
+<span class="sd">        parent_fraction (float): Fraction of population to use as parents for</span>
+<span class="sd">            reproduction. Default is 0.25 from the paper.</span>
 <span class="sd">        n_iterations (int): Number of GA iterations to run.</span>
 <span class="sd">        mutation_probability (float): Initial probability of mutation.</span>
 <span class="sd">        optimization_level (int): Qiskit transpilation optimization level.</span>
 <span class="sd">        shots (int): Number of shots for quantum circuit execution.</span>
-<span class="sd">        num_colors (int): Number of distinct sequences per strategy (``k`` in the paper).</span>
-<span class="sd">        group_size (int): Size of the decoupling group (``|G|`` in the paper).</span>
-<span class="sd">        mode (str): Mode for generating initial population.</span>
+<span class="sd">        num_colors (int): Number of distinct sequences per strategy (``k`` in the</span>
+<span class="sd">            paper).</span>
+<span class="sd">        decoupling_group (DecouplingGroup): The decoupling group to use.</span>
+<span class="sd">            Default is ``G`` from the paper.</span>
+<span class="sd">        mode (str): Mode for generating initial population. Can be either ``uniform``</span>
+<span class="sd">            or ``random``.</span>
 <span class="sd">        dynamic_mutation (bool): Whether to dynamically adjust mutation probability.</span>
 <span class="sd">        mutation_decay (float): Factor to adjust mutation probability.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">pop_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">16</span>
     <span class="n">sequence_length</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">8</span>
-    <span class="n">parent_fraction</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.25</span>  <span class="c1"># Fraction of K to use as parents</span>
+    <span class="n">parent_fraction</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.25</span>
     <span class="n">n_iterations</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">20</span>
     <span class="n">mutation_probability</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.75</span>
     <span class="n">optimization_level</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span>
     <span class="n">shots</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">4000</span>
     <span class="n">num_colors</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">3</span>
-    <span class="n">group_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">8</span>
-    <span class="n">mode</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;random&quot;</span>
+    <span class="n">decoupling_group</span><span class="p">:</span> <span class="n">DecouplingGroup</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="k">lambda</span><span class="p">:</span> <span class="n">DEFAULT_GROUP</span><span class="p">)</span>
+    <span class="n">mode</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;uniform&quot;</span>
     <span class="n">dynamic_mutation</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
     <span class="n">mutation_decay</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.1</span>
 
 <div class="viewcode-block" id="TrainingConfig.to_dict">
 <a class="viewcode-back" href="../../api/gadd.html#gadd.gadd.TrainingConfig.to_dict">[docs]</a>
     <span class="k">def</span> <span class="nf">to_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
-        <span class="k">return</span> <span class="n">asdict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span></div>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Serializes training configuration to a dictionary.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Dict[str, Any]: The serialized output.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">asdict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="c1"># Convert DecouplingGroup to dict for serialization</span>
+        <span class="n">data</span><span class="p">[</span><span class="s2">&quot;decoupling_group&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;elements&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">decoupling_group</span><span class="o">.</span><span class="n">elements</span><span class="p">,</span>
+            <span class="s2">&quot;names&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">decoupling_group</span><span class="o">.</span><span class="n">names</span><span class="p">,</span>
+            <span class="s2">&quot;multiplication&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">decoupling_group</span><span class="o">.</span><span class="n">multiplication</span><span class="p">,</span>
+            <span class="s2">&quot;inverse_map&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">decoupling_group</span><span class="o">.</span><span class="n">inverse_map</span><span class="p">,</span>
+        <span class="p">}</span>
+        <span class="k">return</span> <span class="n">data</span></div>
 
 
 <div class="viewcode-block" id="TrainingConfig.from_dict">
 <a class="viewcode-back" href="../../api/gadd.html#gadd.gadd.TrainingConfig.from_dict">[docs]</a>
     <span class="nd">@classmethod</span>
     <span class="k">def</span> <span class="nf">from_dict</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="s2">&quot;TrainingConfig&quot;</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Deserializes a dictionary object to a ``TrainingConfig`` object.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            data (Dict[str, Any]): The serialized input.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            TrainingConfig: The deserialized output.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Convert decoupling_group dict back to DecouplingGroup</span>
+        <span class="k">if</span> <span class="s2">&quot;decoupling_group&quot;</span> <span class="ow">in</span> <span class="n">data</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;decoupling_group&quot;</span><span class="p">],</span> <span class="nb">dict</span><span class="p">):</span>
+            <span class="n">group_data</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s2">&quot;decoupling_group&quot;</span><span class="p">]</span>
+            <span class="n">data</span><span class="p">[</span><span class="s2">&quot;decoupling_group&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">DecouplingGroup</span><span class="p">(</span><span class="o">**</span><span class="n">group_data</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="o">**</span><span class="n">data</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="TrainingConfig.__str__">
+<a class="viewcode-back" href="../../api/gadd.html#gadd.gadd.TrainingConfig.__str__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return human-readable string representation.&quot;&quot;&quot;</span>
+        <span class="n">lines</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="s2">&quot;GADD Training Configuration:&quot;</span><span class="p">,</span>
+            <span class="sa">f</span><span class="s2">&quot;  Population size: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">pop_size</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="sa">f</span><span class="s2">&quot;  Sequence length: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">sequence_length</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="sa">f</span><span class="s2">&quot;  Iterations: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">n_iterations</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="sa">f</span><span class="s2">&quot;  Colors: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">num_colors</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="sa">f</span><span class="s2">&quot;  Shots per evaluation: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">shots</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="sa">f</span><span class="s2">&quot;  Mutation probability: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">mutation_probability</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="sa">f</span><span class="s2">&quot;  Mode: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">mode</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+        <span class="p">]</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">dynamic_mutation</span><span class="p">:</span>
+            <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Dynamic mutation: enabled (decay=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">mutation_decay</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">lines</span><span class="p">)</span></div>
 </div>
 
 
@@ -358,6 +410,37 @@
         <span class="n">result_dict</span><span class="p">[</span><span class="s2">&quot;best_sequence&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">best_sequence</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()</span>
         <span class="n">result_dict</span><span class="p">[</span><span class="s2">&quot;config&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()</span>
         <span class="k">return</span> <span class="n">result_dict</span></div>
+
+
+<div class="viewcode-block" id="TrainingResult.__str__">
+<a class="viewcode-back" href="../../api/gadd.html#gadd.gadd.TrainingResult.__str__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return human-readable string representation.&quot;&quot;&quot;</span>
+        <span class="n">lines</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="s2">&quot;GADD Training Results:&quot;</span><span class="p">,</span>
+            <span class="sa">f</span><span class="s2">&quot;  Best score: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">best_score</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="sa">f</span><span class="s2">&quot;  Training time: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">training_time</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2">s&quot;</span><span class="p">,</span>
+            <span class="sa">f</span><span class="s2">&quot;  Iterations completed: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">iteration_data</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+        <span class="p">]</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">iteration_data</span><span class="p">:</span>
+            <span class="n">first_score</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">iteration_data</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s2">&quot;best_score&quot;</span><span class="p">]</span>
+            <span class="n">improvement</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">best_score</span> <span class="o">-</span> <span class="n">first_score</span>
+            <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Score improvement: +</span><span class="si">{</span><span class="n">improvement</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">comparison_data</span><span class="p">:</span>
+            <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;  Compared against </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">comparison_data</span><span class="p">)</span><span class="si">}</span><span class="s2"> standard sequences&quot;</span>
+            <span class="p">)</span>
+            <span class="n">best_standard</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">comparison_data</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+            <span class="n">advantage</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">best_score</span> <span class="o">-</span> <span class="n">best_standard</span>
+            <span class="k">if</span> <span class="n">advantage</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Advantage over best standard: +</span><span class="si">{</span><span class="n">advantage</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Best sequence found:&quot;</span><span class="p">)</span>
+        <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">best_sequence</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">lines</span><span class="p">)</span></div>
 </div>
 
 
@@ -391,7 +474,6 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">_coloring</span> <span class="o">=</span> <span class="n">ColorAssignment</span><span class="p">(</span><span class="n">backend</span><span class="o">=</span><span class="n">backend</span><span class="p">)</span>
         <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">coloring</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
             <span class="c1"># Convert dict to ColorAssignment</span>
-            <span class="c1"># Assume dict is qubit-&gt;color mapping</span>
             <span class="n">color_to_qubits</span> <span class="o">=</span> <span class="p">{}</span>
             <span class="k">for</span> <span class="n">qubit</span><span class="p">,</span> <span class="n">color</span> <span class="ow">in</span> <span class="n">coloring</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
                 <span class="k">if</span> <span class="n">color</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">color_to_qubits</span><span class="p">:</span>
@@ -402,9 +484,6 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">_coloring</span> <span class="o">=</span> <span class="n">coloring</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_coloring</span> <span class="o">=</span> <span class="kc">None</span>
-
-        <span class="c1"># Decoupling group - matches paper&#39;s group G</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_decoupling_group</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;Ip&quot;</span><span class="p">,</span> <span class="s2">&quot;Im&quot;</span><span class="p">,</span> <span class="s2">&quot;Xp&quot;</span><span class="p">,</span> <span class="s2">&quot;Xm&quot;</span><span class="p">,</span> <span class="s2">&quot;Yp&quot;</span><span class="p">,</span> <span class="s2">&quot;Ym&quot;</span><span class="p">,</span> <span class="s2">&quot;Zp&quot;</span><span class="p">,</span> <span class="s2">&quot;Zm&quot;</span><span class="p">]</span>
 
         <span class="c1"># Training state for resume capability</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_training_state</span> <span class="o">=</span> <span class="kc">None</span></div>
@@ -477,6 +556,8 @@
         <span class="c1"># Use provided backend or fall back to instance backend</span>
         <span class="n">backend</span> <span class="o">=</span> <span class="n">backend</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">_backend</span>
 
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;strategy&quot;</span><span class="p">,</span> <span class="n">strategy</span><span class="p">)</span>
+
         <span class="c1"># Get coloring for the circuit</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_coloring</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">coloring_dict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_coloring</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()</span>
@@ -491,7 +572,10 @@
         <span class="n">instruction_durations</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="k">if</span> <span class="n">backend</span><span class="p">:</span>
             <span class="k">try</span><span class="p">:</span>
-                <span class="n">instruction_durations</span> <span class="o">=</span> <span class="n">InstructionDurations</span><span class="o">.</span><span class="n">from_backend</span><span class="p">(</span><span class="n">backend</span><span class="p">)</span>
+                <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">backend</span><span class="p">,</span> <span class="s2">&quot;instruction_durations&quot;</span><span class="p">):</span>
+                    <span class="n">instruction_durations</span> <span class="o">=</span> <span class="n">backend</span><span class="o">.</span><span class="n">instruction_durations</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">instruction_durations</span> <span class="o">=</span> <span class="n">InstructionDurations</span><span class="o">.</span><span class="n">from_backend</span><span class="p">(</span><span class="n">backend</span><span class="p">)</span>
             <span class="k">except</span><span class="p">:</span>
                 <span class="k">pass</span>
 
@@ -500,6 +584,7 @@
             <span class="n">target_circuit</span><span class="p">,</span>
             <span class="n">strategy</span><span class="p">,</span>
             <span class="n">coloring_dict</span><span class="p">,</span>
+            <span class="n">backend</span><span class="o">=</span><span class="n">backend</span><span class="p">,</span>
             <span class="n">instruction_durations</span><span class="o">=</span><span class="n">instruction_durations</span><span class="p">,</span>
             <span class="n">staggered</span><span class="o">=</span><span class="n">staggered</span><span class="p">,</span>
         <span class="p">)</span></div>
@@ -676,7 +761,7 @@
     <span class="k">def</span> <span class="nf">_initialize_uniform_population</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize uniform population as described in the paper.&quot;&quot;&quot;</span>
         <span class="n">population</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="n">group_size</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_decoupling_group</span><span class="p">)</span>
+        <span class="n">group_size</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">decoupling_group</span><span class="o">.</span><span class="n">size</span>
 
         <span class="c1"># Calculate repetitions per element</span>
         <span class="n">reps_per_element</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">pop_size</span> <span class="o">//</span> <span class="n">group_size</span>
@@ -700,7 +785,9 @@
             <span class="n">sequence</span> <span class="o">=</span> <span class="n">pattern</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
 
             <span class="c1"># Calculate last element to make sequence multiply to identity</span>
-            <span class="n">last_element</span> <span class="o">=</span> <span class="n">complete_sequence_to_identity</span><span class="p">(</span><span class="n">sequence</span><span class="p">)</span>
+            <span class="n">last_element</span> <span class="o">=</span> <span class="n">complete_sequence_to_identity</span><span class="p">(</span>
+                <span class="n">sequence</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">decoupling_group</span>
+            <span class="p">)</span>
             <span class="n">sequence</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">last_element</span><span class="p">)</span>
 
             <span class="c1"># Create strategy for all colors</span>
@@ -730,10 +817,12 @@
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Generate a random DD sequence that multiplies to identity.&quot;&quot;&quot;</span>
         <span class="n">sequence</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">sequence_length</span> <span class="o">-</span> <span class="mi">1</span><span class="p">):</span>
-            <span class="n">sequence</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_rng</span><span class="o">.</span><span class="n">integers</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">group_size</span><span class="p">))</span>
+            <span class="n">sequence</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_rng</span><span class="o">.</span><span class="n">integers</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">decoupling_group</span><span class="o">.</span><span class="n">size</span><span class="p">))</span>
 
         <span class="c1"># Calculate last element to ensure multiplication to identity</span>
-        <span class="n">last_element</span> <span class="o">=</span> <span class="n">complete_sequence_to_identity</span><span class="p">(</span><span class="n">sequence</span><span class="p">)</span>
+        <span class="n">last_element</span> <span class="o">=</span> <span class="n">complete_sequence_to_identity</span><span class="p">(</span>
+            <span class="n">sequence</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">decoupling_group</span>
+        <span class="p">)</span>
         <span class="n">sequence</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">last_element</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="n">sequence</span>
@@ -754,7 +843,7 @@
 
         <span class="n">gates</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">char</span> <span class="ow">in</span> <span class="n">first_sequence</span><span class="p">:</span>
-            <span class="n">gates</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_decoupling_group</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">char</span><span class="p">)])</span>
+            <span class="n">gates</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">decoupling_group</span><span class="o">.</span><span class="n">element_name</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">char</span><span class="p">)))</span>
 
         <span class="k">return</span> <span class="n">gates</span>
 
@@ -888,7 +977,9 @@
 
         <span class="c1"># Calculate last element to maintain group constraint</span>
         <span class="n">child_indices</span> <span class="o">=</span> <span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">c</span><span class="p">)</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">child_seq</span><span class="p">]</span>
-        <span class="n">last_element</span> <span class="o">=</span> <span class="n">complete_sequence_to_identity</span><span class="p">(</span><span class="n">child_indices</span><span class="p">)</span>
+        <span class="n">last_element</span> <span class="o">=</span> <span class="n">complete_sequence_to_identity</span><span class="p">(</span>
+            <span class="n">child_indices</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">decoupling_group</span>
+        <span class="p">)</span>
         <span class="n">child_seq</span> <span class="o">+=</span> <span class="nb">str</span><span class="p">(</span><span class="n">last_element</span><span class="p">)</span>
 
         <span class="c1"># Replicate for all colors</span>
@@ -902,11 +993,13 @@
         <span class="c1"># Mutate random position (except last)</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">seq</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
             <span class="n">idx</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rng</span><span class="o">.</span><span class="n">integers</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">seq</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
-            <span class="n">seq</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_rng</span><span class="o">.</span><span class="n">integers</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">group_size</span><span class="p">))</span>
+            <span class="n">seq</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_rng</span><span class="o">.</span><span class="n">integers</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">decoupling_group</span><span class="o">.</span><span class="n">size</span><span class="p">))</span>
 
             <span class="c1"># Recalculate last element</span>
             <span class="n">seq_indices</span> <span class="o">=</span> <span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">c</span><span class="p">)</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">seq</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]]</span>
-            <span class="n">last_element</span> <span class="o">=</span> <span class="n">complete_sequence_to_identity</span><span class="p">(</span><span class="n">seq_indices</span><span class="p">)</span>
+            <span class="n">last_element</span> <span class="o">=</span> <span class="n">complete_sequence_to_identity</span><span class="p">(</span>
+                <span class="n">seq_indices</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">decoupling_group</span>
+            <span class="p">)</span>
             <span class="n">seq</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">last_element</span><span class="p">)</span>
 
         <span class="c1"># Replicate for all colors</span>

@@ -407,6 +407,13 @@
 <a class="viewcode-back" href="../../api/utility_functions.html#gadd.utility_functions.SuccessProbability.get_name">[docs]</a>
     <span class="k">def</span> <span class="nf">get_name</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
         <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;Success Probability (|</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_target</span><span class="si">}</span><span class="s2">⟩)&quot;</span></div>
+
+
+<div class="viewcode-block" id="SuccessProbability.__str__">
+<a class="viewcode-back" href="../../api/utility_functions.html#gadd.utility_functions.SuccessProbability.__str__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return human-readable string representation.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;Success probability for |</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_target</span><span class="si">}</span><span class="s2">⟩&quot;</span></div>
 </div>
 
 
@@ -461,6 +468,20 @@
 <a class="viewcode-back" href="../../api/utility_functions.html#gadd.utility_functions.OneNormDistance.get_name">[docs]</a>
     <span class="k">def</span> <span class="nf">get_name</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
         <span class="k">return</span> <span class="s2">&quot;1-Norm Distance&quot;</span></div>
+
+
+<div class="viewcode-block" id="OneNormDistance.__str__">
+<a class="viewcode-back" href="../../api/utility_functions.html#gadd.utility_functions.OneNormDistance.__str__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return human-readable string representation.&quot;&quot;&quot;</span>
+        <span class="n">ideal_states</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">state</span> <span class="k">for</span> <span class="n">state</span><span class="p">,</span> <span class="n">prob</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">ideal_distribution</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">prob</span> <span class="o">&gt;</span> <span class="mf">0.01</span>
+        <span class="p">]</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">ideal_states</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="mi">3</span><span class="p">:</span>
+            <span class="n">states_str</span> <span class="o">=</span> <span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;|</span><span class="si">{</span><span class="n">state</span><span class="si">}</span><span class="s2">⟩&quot;</span> <span class="k">for</span> <span class="n">state</span> <span class="ow">in</span> <span class="n">ideal_states</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">states_str</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">ideal_states</span><span class="p">)</span><span class="si">}</span><span class="s2"> target states&quot;</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;1-norm fidelity to </span><span class="si">{</span><span class="n">states_str</span><span class="si">}</span><span class="s2">&quot;</span></div>
 </div>
 
 
@@ -489,6 +510,14 @@
 <a class="viewcode-back" href="../../api/utility_functions.html#gadd.utility_functions.GHZUtility.get_name">[docs]</a>
     <span class="k">def</span> <span class="nf">get_name</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
         <span class="k">return</span> <span class="s2">&quot;GHZ State Fidelity&quot;</span></div>
+
+
+<div class="viewcode-block" id="GHZUtility.__str__">
+<a class="viewcode-back" href="../../api/utility_functions.html#gadd.utility_functions.GHZUtility.__str__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return human-readable string representation.&quot;&quot;&quot;</span>
+        <span class="n">n_qubits</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="nb">next</span><span class="p">(</span><span class="nb">iter</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ideal_distribution</span><span class="o">.</span><span class="n">keys</span><span class="p">())))</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;GHZ state fidelity (</span><span class="si">{</span><span class="n">n_qubits</span><span class="si">}</span><span class="s2"> qubits)&quot;</span></div>
 </div>
 
 
@@ -526,6 +555,13 @@
 <a class="viewcode-back" href="../../api/utility_functions.html#gadd.utility_functions.CustomUtility.get_name">[docs]</a>
     <span class="k">def</span> <span class="nf">get_name</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_name</span></div>
+
+
+<div class="viewcode-block" id="CustomUtility.__str__">
+<a class="viewcode-back" href="../../api/utility_functions.html#gadd.utility_functions.CustomUtility.__str__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return human-readable string representation.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;Custom Utility </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_name</span><span class="si">}</span><span class="s2">&quot;</span></div>
 </div>
 
 

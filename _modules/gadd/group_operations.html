@@ -234,10 +234,46 @@
         <article role="main" id="furo-main-content">
           <h1>Source code for gadd.group_operations</h1><div class="highlight"><pre>
 <span></span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">Group operations for the decoupling group.</span>
+<span class="sd">Decoupling groups and group operations.</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Union</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Dict</span>
+<span class="kn">from</span> <span class="nn">dataclasses</span> <span class="kn">import</span> <span class="n">dataclass</span>
+
+
+<div class="viewcode-block" id="DecouplingGroup">
+<a class="viewcode-back" href="../../api/group_operations.html#gadd.group_operations.DecouplingGroup">[docs]</a>
+<span class="nd">@dataclass</span>
+<span class="k">class</span> <span class="nc">DecouplingGroup</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Definition of a decoupling group for DD sequences.&quot;&quot;&quot;</span>
+
+    <span class="n">elements</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span>
+    <span class="n">names</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span>
+    <span class="n">multiplication</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]]</span>
+    <span class="n">inverse_map</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]]</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">size</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Size of the group.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">elements</span><span class="p">)</span>
+
+<div class="viewcode-block" id="DecouplingGroup.element_name">
+<a class="viewcode-back" href="../../api/group_operations.html#gadd.group_operations.DecouplingGroup.element_name">[docs]</a>
+    <span class="k">def</span> <span class="nf">element_name</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get element name from index.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">names</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">index</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;g</span><span class="si">{</span><span class="n">index</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="DecouplingGroup.element_index">
+<a class="viewcode-back" href="../../api/group_operations.html#gadd.group_operations.DecouplingGroup.element_index">[docs]</a>
+    <span class="k">def</span> <span class="nf">element_index</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get element index from name.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">elements</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">elements</span><span class="p">[</span><span class="n">name</span><span class="p">]</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unknown element name: </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span></div>
+</div>
+
+
 
 <span class="c1"># The default group group G = {Ip, Im, Xp, Xm, Yp, Ym, Zp, Zm} of</span>
 <span class="c1"># the single-qubit Pauli operations and their inverses as defined</span>
@@ -274,11 +310,11 @@
 <span class="p">]</span>
 
 <span class="c1"># Default group structure</span>
-<span class="n">DEFAULT_GROUP</span> <span class="o">=</span> <span class="p">{</span>
-    <span class="s2">&quot;elements&quot;</span><span class="p">:</span> <span class="n">GROUP_ELEMENTS</span><span class="p">,</span>
-    <span class="s2">&quot;names&quot;</span><span class="p">:</span> <span class="n">ELEMENT_NAMES</span><span class="p">,</span>
-    <span class="s2">&quot;multiplication&quot;</span><span class="p">:</span> <span class="n">MULTIPLICATION_TABLE</span><span class="p">,</span>
-    <span class="s2">&quot;inverse_map&quot;</span><span class="p">:</span> <span class="p">{</span>
+<span class="n">DEFAULT_GROUP</span> <span class="o">=</span> <span class="n">DecouplingGroup</span><span class="p">(</span>
+    <span class="n">elements</span><span class="o">=</span><span class="n">GROUP_ELEMENTS</span><span class="p">,</span>
+    <span class="n">names</span><span class="o">=</span><span class="n">ELEMENT_NAMES</span><span class="p">,</span>
+    <span class="n">multiplication</span><span class="o">=</span><span class="n">MULTIPLICATION_TABLE</span><span class="p">,</span>
+    <span class="n">inverse_map</span><span class="o">=</span><span class="p">{</span>
         <span class="mi">0</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>  <span class="c1"># Ip^-1 = Ip</span>
         <span class="mi">1</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>  <span class="c1"># Im^-1 = Im</span>
         <span class="mi">2</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span>  <span class="c1"># Xp^-1 = Xm</span>
@@ -288,13 +324,13 @@
         <span class="mi">6</span><span class="p">:</span> <span class="mi">7</span><span class="p">,</span>  <span class="c1"># Zp^-1 = Zm</span>
         <span class="mi">7</span><span class="p">:</span> <span class="mi">6</span><span class="p">,</span>  <span class="c1"># Zm^-1 = Zp</span>
     <span class="p">},</span>
-<span class="p">}</span>
+<span class="p">)</span>
 
 
 <div class="viewcode-block" id="multiply">
 <a class="viewcode-back" href="../../api/group_operations.html#gadd.group_operations.multiply">[docs]</a>
 <span class="k">def</span> <span class="nf">multiply</span><span class="p">(</span>
-    <span class="n">p1</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span> <span class="n">p2</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span> <span class="n">group</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">p1</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span> <span class="n">p2</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span> <span class="n">group</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">DecouplingGroup</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Multiply two group elements.</span>
@@ -313,20 +349,19 @@
         <span class="n">group</span> <span class="o">=</span> <span class="n">DEFAULT_GROUP</span>
 
     <span class="c1"># Convert string names to indices</span>
-    <span class="n">elements</span> <span class="o">=</span> <span class="n">group</span><span class="p">[</span><span class="s2">&quot;elements&quot;</span><span class="p">]</span>
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">p1</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
-        <span class="n">p1</span> <span class="o">=</span> <span class="n">elements</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">p1</span><span class="p">,</span> <span class="n">p1</span><span class="p">)</span>
+        <span class="n">p1</span> <span class="o">=</span> <span class="n">group</span><span class="o">.</span><span class="n">element_index</span><span class="p">(</span><span class="n">p1</span><span class="p">)</span>
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">p2</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
-        <span class="n">p2</span> <span class="o">=</span> <span class="n">elements</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">p2</span><span class="p">,</span> <span class="n">p2</span><span class="p">)</span>
+        <span class="n">p2</span> <span class="o">=</span> <span class="n">group</span><span class="o">.</span><span class="n">element_index</span><span class="p">(</span><span class="n">p2</span><span class="p">)</span>
 
     <span class="c1"># Use multiplication table</span>
-    <span class="k">return</span> <span class="n">group</span><span class="p">[</span><span class="s2">&quot;multiplication&quot;</span><span class="p">][</span><span class="n">p1</span><span class="p">][</span><span class="n">p2</span><span class="p">]</span></div>
+    <span class="k">return</span> <span class="n">group</span><span class="o">.</span><span class="n">multiplication</span><span class="p">[</span><span class="n">p1</span><span class="p">][</span><span class="n">p2</span><span class="p">]</span></div>
 
 
 
 <div class="viewcode-block" id="invert">
 <a class="viewcode-back" href="../../api/group_operations.html#gadd.group_operations.invert">[docs]</a>
-<span class="k">def</span> <span class="nf">invert</span><span class="p">(</span><span class="n">a</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span> <span class="n">group</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="k">def</span> <span class="nf">invert</span><span class="p">(</span><span class="n">a</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span> <span class="n">group</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">DecouplingGroup</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Find the inverse of a group element.</span>
 
@@ -343,17 +378,15 @@
         <span class="n">group</span> <span class="o">=</span> <span class="n">DEFAULT_GROUP</span>
 
     <span class="c1"># Convert string to index</span>
-    <span class="n">elements</span> <span class="o">=</span> <span class="n">group</span><span class="p">[</span><span class="s2">&quot;elements&quot;</span><span class="p">]</span>
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
-        <span class="n">a</span> <span class="o">=</span> <span class="n">elements</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">a</span><span class="p">)</span>
+        <span class="n">a</span> <span class="o">=</span> <span class="n">group</span><span class="o">.</span><span class="n">element_index</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
 
-    <span class="c1"># Check if group has inverse map</span>
-    <span class="k">if</span> <span class="s2">&quot;inverse_map&quot;</span> <span class="ow">in</span> <span class="n">group</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">group</span><span class="p">[</span><span class="s2">&quot;inverse_map&quot;</span><span class="p">][</span><span class="n">a</span><span class="p">]</span>
+    <span class="c1"># Use inverse map</span>
+    <span class="k">if</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">group</span><span class="o">.</span><span class="n">inverse_map</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">group</span><span class="o">.</span><span class="n">inverse_map</span><span class="p">[</span><span class="n">a</span><span class="p">]</span>
 
-    <span class="c1"># Otherwise search for inverse</span>
-    <span class="n">group_size</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">group</span><span class="p">[</span><span class="s2">&quot;elements&quot;</span><span class="p">])</span>
-    <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">group_size</span><span class="p">):</span>
+    <span class="c1"># Otherwise search for inverse (shouldn&#39;t happen for valid groups)</span>
+    <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">group</span><span class="o">.</span><span class="n">size</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">multiply</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">group</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">b</span>
 
@@ -364,7 +397,7 @@
 <div class="viewcode-block" id="complete_sequence_to_identity">
 <a class="viewcode-back" href="../../api/group_operations.html#gadd.group_operations.complete_sequence_to_identity">[docs]</a>
 <span class="k">def</span> <span class="nf">complete_sequence_to_identity</span><span class="p">(</span>
-    <span class="n">partial_sequence</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">]],</span> <span class="n">group</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">partial_sequence</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">]],</span> <span class="n">group</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">DecouplingGroup</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Find the element needed to complete a sequence to multiply to identity.</span>
@@ -387,13 +420,7 @@
     <span class="k">for</span> <span class="n">element</span> <span class="ow">in</span> <span class="n">partial_sequence</span><span class="p">:</span>
         <span class="n">result</span> <span class="o">=</span> <span class="n">multiply</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">element</span><span class="p">,</span> <span class="n">group</span><span class="p">)</span>
 
-    <span class="c1"># We need to find an element that when multiplied with result gives Ip (0)</span>
-    <span class="c1"># This is not necessarily the inverse if result is already a form of identity</span>
-    <span class="k">if</span> <span class="n">result</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>  <span class="c1"># Already Ip</span>
-        <span class="k">return</span> <span class="mi">0</span>
-    <span class="k">if</span> <span class="n">result</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>  <span class="c1"># Result is Im</span>
-        <span class="k">return</span> <span class="mi">1</span>
-    <span class="c1"># For non-identity results, find the inverse</span>
+    <span class="c1"># Return inverse of result</span>
     <span class="k">return</span> <span class="n">invert</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">group</span><span class="p">)</span></div>
 
 </pre></div>

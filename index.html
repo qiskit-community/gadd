@@ -246,17 +246,6 @@
 <a class="reference external" href="https://opensource.org/licenses/Apache-2.0"><img alt="License" src="https://img.shields.io/badge/License-Apache%202.0-blue.svg" /></a>
 <a class="reference external" href="https://coveralls.io/github/qiskit-community/gadd?branch=main"><img alt="Coverage Status" src="https://coveralls.io/repos/github/qiskit-community/gadd/badge.svg?branch=main" /></a></p>
 <p><strong>GADD</strong> is a Python package for empirically optimizing dynamical decoupling (DD) sequences on quantum processors using a genetic algorithm as described in the research paper <a class="reference external" href="https://arxiv.org/abs/2403.02294">“Empirical learning of dynamical decoupling on quantum processors”</a>.</p>
-<section id="key-features">
-<h2>Key Features<a class="headerlink" href="#key-features" title="Link to this heading">¶</a></h2>
-<ul class="simple">
-<li><p><strong>Empirical Optimization</strong>: Learn DD sequences directly from quantum hardware feedback</p></li>
-<li><p><strong>Hardware Agnostic</strong>: Works with any quantum backend that supports Qiskit</p></li>
-<li><p><strong>Genetic Algorithm</strong>: Efficient search through large DD sequence spaces</p></li>
-<li><p><strong>Multiple Utility Functions</strong>: Built-in metrics for various quantum applications</p></li>
-<li><p><strong>Comparative Analysis</strong>: Benchmark against standard DD sequences (XY4, CPMG, EDD, URDD)</p></li>
-<li><p><strong>Comprehensive Results</strong>: Detailed training progression and performance analytics</p></li>
-</ul>
-</section>
 <section id="installation">
 <h2>Installation<a class="headerlink" href="#installation" title="Link to this heading">¶</a></h2>
 <section id="requirements">
@@ -268,6 +257,7 @@
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>gadd
 </pre></div>
 </div>
+<p>To install optional dependencies for developing the package and building documentation, run <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">gadd[dev]</span></code> and <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">gadd[docs]</span></code> respectively.</p>
 </section>
 <section id="install-from-source">
 <h3>Install from Source<a class="headerlink" href="#install-from-source" title="Link to this heading">¶</a></h3>
@@ -415,18 +405,20 @@ the training progression and running the circuit on the target circuit are also 
 │   ├── __init__.py                # Package initialization
 │   ├── gadd.py                    # Main GADD algorithm implementation
 │   ├── experiments.py             # GADD experiments from the paper
-│   ├── sequences.py               # DD sequence definitions
+│   ├── strategies.py              # DD strategy definitions
 │   ├── utility_functions.py       # Utility function implementations
 │   ├── group_operations.py        # Group theory operations
 │   └── circuit_padding.py         # Circuit padding utilities
 |
-└── tests/                         # Test suite
+└── tests/                         # Test suite directory
     ├── __init__.py                # Test initialization
     ├── test_gadd.py               # Core algorithm tests
     ├── test_sequences.py          # DD sequence tests
     ├── test_utility_functions.py  # Utility function tests
     ├── test_group_operations.py   # Group operation tests
-    └── test_circuit_padding.py    # DD sequence tests
+    ├── test_circuit_padding.py    # Test circuit padding
+    ├── test_integration.py        # Integration tests
+    └── fixtures.py                # Mock fixtures for testing
 </pre></div>
 </div>
 </section>
@@ -492,7 +484,6 @@ the training progression and running the circuit on the target circuit are also 
           <div class="toc-tree">
             <ul>
 <li><a class="reference internal" href="#">GADD: Genetic Algorithm for Dynamical Decoupling</a><ul>
-<li><a class="reference internal" href="#key-features">Key Features</a></li>
 <li><a class="reference internal" href="#installation">Installation</a><ul>
 <li><a class="reference internal" href="#requirements">Requirements</a></li>
 <li><a class="reference internal" href="#install-from-pypi">Install from PyPI</a></li>
