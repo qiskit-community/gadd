@@ -2,12 +2,10 @@
 Mock fixtures for testing.
 """
 
-from typing import Optional
 from unittest.mock import Mock
 
 from qiskit import QuantumCircuit
-from qiskit.transpiler import Target, InstructionDurations, InstructionProperties
-from qiskit.circuit.library import CXGate, XGate, SXGate, RZGate
+from qiskit.transpiler import InstructionDurations
 from qiskit_ibm_runtime.fake_provider import FakeSherbrooke
 
 

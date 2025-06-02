@@ -8,8 +8,11 @@ from typing import List, Dict, Optional, Union
 import numpy as np
 import rustworkx as rx
 
-from qiskit.circuit.library import IGate, XGate, YGate, U1Gate, RZGate
 from qiskit import QuantumCircuit
+from qiskit.circuit.library import IGate, XGate, YGate, U1Gate, RZGate
+from qiskit.providers import BackendV2 as Backend
+
+from gadd.group_operations import DecouplingGroup
 
 
 # Default gateset for DD pulses

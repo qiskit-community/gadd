@@ -7,7 +7,7 @@ during idle periods, following the approach described in the GADD paper.
 
 from typing import List, Dict, Optional
 import numpy as np
-from qiskit import QuantumCircuit
+from qiskit import QuantumCircuit, transpile
 from qiskit.providers import BackendV2 as Backend
 from qiskit.circuit import Instruction, Gate, Delay
 from qiskit.circuit.library import IGate, RXGate, RYGate, RZGate
@@ -135,43 +135,39 @@ def apply_dd_strategy(
     circuit: QuantumCircuit,
     strategy: DDStrategy,
     coloring: Dict[int, int],
-    backend: Optional["Backend"] = None,
-    instruction_durations: Optional[InstructionDurations] = None,
-    min_idle_duration: int = 64,
+    backend: Backend,
     staggered: bool = False,
+    **dd_options: Optional[Dict],
 ) -> QuantumCircuit:
     """
-    Apply a DD strategy to a quantum circuit using Qiskit's PadDynamicalDecoupling.
+    Apply a DD strategy to a quantum circuit using ``PadDynamicalDecoupling``.
 
     Args:
         circuit: Original quantum circuit.
         strategy: DD strategy containing sequences for each color.
         coloring: Mapping from qubit to color.
-        backend: Optional backend for extracting instruction durations.
-        instruction_durations: Backend-specific instruction durations.
-        min_idle_duration: Minimum idle duration to insert DD.
+        backend: Backend to execute circuit on.
         staggered: Whether to apply CR-aware staggering for crosstalk suppression.
+        dd_options: Additionl options to pass to ``PadDynamicalDecoupling``.
 
     Returns:
         Circuit with DD strategy applied.
     """
-    # Create a copy of the circuit
-    padded_circuit = circuit.copy()
+    if backend is not None:
+        try:
+            instruction_durations = InstructionDurations.from_backend(backend)
+        except:  # pylint: disable=bare-except
+            instruction_durations = InstructionDurations()
+    else:
+        instruction_durations = InstructionDurations()
+
+    # Transpile the circuit itself first
+    padded_circuit = transpile(circuit, backend)
     suffix = "_DD_staggered" if staggered else "_DD"
     padded_circuit.name = (
         f"{circuit.name}{suffix}" if circuit.name else f"circuit{suffix}"
     )
-
-    # Get default durations if not provided
-    if instruction_durations is None:
-        if backend is not None:
-            try:
-                instruction_durations = InstructionDurations.from_backend(backend)
-            except:
-                instruction_durations = InstructionDurations()
-        else:
-            instruction_durations = InstructionDurations()
-
+    print(padded_circuit)
     # Get unique colors and sort them
     unique_colors = sorted(set(coloring.values()))
 
@@ -207,6 +203,9 @@ def apply_dd_strategy(
         # Get qubits for this color
         qubits_for_color = [q for q, c in coloring.items() if c == color]
 
+        if not qubits_for_color:
+            continue
+
         # Get DD sequence for this color
         try:
             dd_sequence = strategy.get_sequence(color)
@@ -215,17 +214,13 @@ def apply_dd_strategy(
             continue
 
         # Convert sequence gates to Qiskit gates
-        # Include identity gates as Delay operations to maintain sequence structure
         dd_gates = []
         for gate_name in dd_sequence.gates:
-            pulse = DDPulse(gate_name, 0, 0)  # Qubit and time don't matter here
-            dd_gates.append(pulse.to_gate())
+            if gate_name not in ["I", "Ip", "Im"]:  # Skip identity gates
+                pulse = DDPulse(gate_name, 0, 0)  # Qubit and time don't matter here
+                dd_gates.append(pulse.to_gate())
 
-        if not dd_gates or len(dd_gates) % 2 == 1:
-            # Skip sequences that don't have even number of gates
-            print(
-                f"Warning: Skipping DD sequence for color {color} - odd number of gates ({len(dd_gates)})"
-            )
+        if not dd_gates:
             continue
 
         # Get spacing for this color if staggered
@@ -241,12 +236,12 @@ def apply_dd_strategy(
                     durations=instruction_durations,
                     dd_sequences=dd_gates,
                     qubits=qubits_for_color,
-                    pulse_alignment=1,
-                    sequence_min_length_ratios=[min_idle_duration],
+                    # pulse_alignment=pulse_alignment,
                     insert_multiple_cycles=True,
                     coupling_map=None,
                     alt_spacings=alt_spacings,
                     skip_reset_qubits=False,
+                    **dd_options,
                 ),
             ]
         )

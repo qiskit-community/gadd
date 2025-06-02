@@ -27,7 +27,7 @@ If you use GADD in your work, please cite:
    :caption: API Reference
 
    api/gadd
-   api/sequences
+   api/strategies
    api/utility_functions
    api/group_operations
    api/circuit_padding

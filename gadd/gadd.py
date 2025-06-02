@@ -259,7 +259,7 @@ class GADD:
                 "Coloring must be a dictionary, ColorAssignment instance, or None"
             )
 
-    def apply_dd(
+    def apply_strategy(
         self,
         strategy: DDStrategy,
         target_circuit: QuantumCircuit,
@@ -284,8 +284,6 @@ class GADD:
         # Use provided backend or fall back to instance backend
         backend = backend or self._backend
 
-        print("strategy", strategy)
-
         # Get coloring for the circuit
         if self._coloring is not None:
             coloring_dict = self._coloring.to_dict()
@@ -296,24 +294,12 @@ class GADD:
             # Fallback: all qubits same color
             coloring_dict = {i: 0 for i in range(target_circuit.num_qubits)}
 
-        # Get instruction durations from backend if available
-        instruction_durations = None
-        if backend:
-            try:
-                if hasattr(backend, "instruction_durations"):
-                    instruction_durations = backend.instruction_durations
-                else:
-                    instruction_durations = InstructionDurations.from_backend(backend)
-            except:
-                pass
-
         # Apply the DD strategy
         return _apply_dd_strategy(
             target_circuit,
             strategy,
             coloring_dict,
             backend=backend,
-            instruction_durations=instruction_durations,
             staggered=staggered,
         )
 
@@ -602,7 +588,7 @@ class GADD:
             dd_strategy = self._create_strategy_from_string(strategy_str)
 
             # Apply DD to circuit
-            padded_circuit = self.apply_dd(dd_strategy, circuit)
+            padded_circuit = self.apply_strategy(dd_strategy, circuit)
             circuits_to_run.append(padded_circuit)
             strategy_map[i] = strategy_str
 
@@ -770,7 +756,9 @@ class GADD:
                 # Check if this should be staggered
                 staggered = std_sequences.is_staggered(seq_name.lower())
 
-                padded_circuit = self.apply_dd(strategy, circuit, staggered=staggered)
+                padded_circuit = self.apply_strategy(
+                    strategy, circuit, staggered=staggered
+                )
 
                 job = sampler.run(padded_circuit, shots=self.config.shots)
                 result = job.result()
@@ -872,7 +860,7 @@ class GADD:
         else:
             plt.show()
 
-    def run(
+    def evaluate(
         self,
         strategy: DDStrategy,
         target_circuit: QuantumCircuit,
@@ -880,7 +868,7 @@ class GADD:
         utility_function: Optional[Callable[[QuantumCircuit, Any], float]] = None,
         staggered: bool = False,
     ) -> Dict[str, Any]:
-        """Run a specific DD strategy on a target circuit.
+        """Run a specific DD strategy on a target circuit and evaluate its utility.
 
         Args:
             strategy: DD strategy to apply.
@@ -893,7 +881,9 @@ class GADD:
             Dictionary with execution results.
         """
         # Apply DD strategy to circuit
-        padded_circuit = self.apply_dd(strategy, target_circuit, staggered=staggered)
+        padded_circuit = self.apply_strategy(
+            strategy, target_circuit, staggered=staggered
+        )
 
         # Execute circuit
         job = sampler.run(padded_circuit, shots=self.config.shots)

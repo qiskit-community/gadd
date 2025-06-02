@@ -1,6 +1,7 @@
 """Integration tests."""
 
-import unittest, os
+import os
+import unittest
 from unittest.mock import patch
 
 from qiskit import QuantumCircuit
@@ -96,7 +97,7 @@ class TestIntegration(unittest.TestCase):
         target_circuit.delay(100, 0, unit="dt")
         target_circuit.cx(0, 1)
 
-        circuit_with_dd = gadd.apply_dd(
+        circuit_with_dd = gadd.apply_strategy(
             strategy=best_strategy, target_circuit=target_circuit
         )
 
@@ -104,7 +105,7 @@ class TestIntegration(unittest.TestCase):
         self.assertIn("DD", circuit_with_dd.name)
 
         # Test running the strategy
-        run_result = gadd.run(
+        run_result = gadd.evaluate(
             strategy=best_strategy, target_circuit=target_circuit, sampler=self.sampler
         )
 

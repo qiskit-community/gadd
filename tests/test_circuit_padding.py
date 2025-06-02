@@ -1,9 +1,12 @@
 """Tests for circuit padding."""
 
 import unittest
+import numpy as np
+
 from qiskit import QuantumCircuit
 from qiskit.circuit import Delay
 from qiskit.circuit.library import XGate, YGate, ZGate, CXGate, RXGate, RYGate, RZGate
+from qiskit.transpiler import InstructionDurations
 
 from gadd.circuit_padding import (
     DDPulse,
@@ -135,7 +138,7 @@ class TestCircuitPadding(unittest.TestCase):
         # Simple test circuit
         self.qc = QuantumCircuit(2)
         self.qc.x(0)
-        self.qc.delay(200, 0, unit="dt")
+        self.qc.delay(2000, 0, unit="dt")
         self.qc.x(0)
         self.qc.cx(0, 1)
 
@@ -152,9 +155,13 @@ class TestCircuitPadding(unittest.TestCase):
         strategy = DDStrategy.from_single_sequence(self.dd_seq)
         padded = apply_dd_strategy(self.qc, strategy, self.coloring, self.backend)
 
-        # Check circuit properties
-        self.assertIsInstance(padded, QuantumCircuit)
-        self.assertEqual(padded.num_qubits, self.qc.num_qubits)
+        # Check DD gates were added
+        self.assertEqual(padded.data[0].operation, XGate())
+        self.assertEqual(padded.data[2].operation, RXGate(np.pi))
+        self.assertEqual(padded.data[4].operation, RYGate(np.pi))
+        self.assertEqual(padded.data[6].operation, RXGate(np.pi))
+        self.assertEqual(padded.data[8].operation, RYGate(np.pi))
+        self.assertEqual(padded.data[10].operation, XGate())
 
         # Check naming
         self.assertIn("DD", padded.name)
@@ -181,9 +188,7 @@ class TestCircuitPadding(unittest.TestCase):
         )
 
         strategy = DDStrategy.from_single_sequence(self.dd_seq)
-        padded = apply_dd_strategy(
-            self.qc, strategy, self.coloring, instruction_durations=durations
-        )
+        padded = apply_dd_strategy(self.qc, strategy, self.coloring, self.backend)
         self.assertIsInstance(padded, QuantumCircuit)
 
     def test_apply_dd_strategy_staggered(self):
@@ -202,7 +207,7 @@ class TestCircuitPadding(unittest.TestCase):
         seq3 = DDSequence(["X", "Y", "X", "Y"])
         strategy = DDStrategy([seq1, seq2, seq3])
 
-        padded = apply_dd_strategy(qc, strategy, coloring, staggered=True)
+        padded = apply_dd_strategy(qc, strategy, coloring, self.backend, staggered=True)
         self.assertIsInstance(padded, QuantumCircuit)
         self.assertIn("staggered", padded.name)
 
@@ -215,7 +220,7 @@ class TestCircuitPadding(unittest.TestCase):
         coloring = {0: 0, 1: 1}
 
         # Should still work, just skip color 1
-        padded = apply_dd_strategy(self.qc, strategy, coloring)
+        padded = apply_dd_strategy(self.qc, strategy, coloring, self.backend)
         self.assertIsInstance(padded, QuantumCircuit)
 
     def test_apply_dd_strategy_odd_sequence(self):
@@ -231,7 +236,7 @@ class TestCircuitPadding(unittest.TestCase):
         captured_output = io.StringIO()
         sys.stdout = captured_output
 
-        padded = apply_dd_strategy(self.qc, strategy, self.coloring)
+        padded = apply_dd_strategy(self.qc, strategy, self.coloring, self.backend)
 
         sys.stdout = sys.__stdout__
         output = captured_output.getvalue()
@@ -245,7 +250,7 @@ class TestCircuitPadding(unittest.TestCase):
         id_seq = DDSequence(["I", "I"])
         strategy = DDStrategy.from_single_sequence(id_seq)
 
-        padded = apply_dd_strategy(self.qc, strategy, self.coloring)
+        padded = apply_dd_strategy(self.qc, strategy, self.coloring, self.backend)
         self.assertIsInstance(padded, QuantumCircuit)
 
     def test_multi_color_strategy(self):
@@ -258,7 +263,8 @@ class TestCircuitPadding(unittest.TestCase):
         # Color qubits differently
         coloring = {0: 0, 1: 1}
 
-        padded = apply_dd_strategy(self.qc, strategy, coloring)
+        padded = apply_dd_strategy(self.qc, strategy, coloring, self.backend)
+        print(padded)
 
         # Both qubits should get different DD sequences
         self.assertIsInstance(padded, QuantumCircuit)
@@ -275,11 +281,12 @@ class TestCircuitPadding(unittest.TestCase):
         coloring = {0: 0}
 
         # With default min_idle_duration, no DD should be inserted
-        padded = apply_dd_strategy(qc, strategy, coloring, min_idle_duration=64)
+        padded = apply_dd_strategy(
+            qc, strategy, coloring, self.backend, {"min_idle_duration": 64}
+        )
 
         # Circuit should be essentially unchanged (just copied)
-        # Note: In real implementation, we'd check that no DD gates were added
-        self.assertIsInstance(padded, QuantumCircuit)
+        self.assertEqual(padded.data, qc.data)
 
 
 class TestIntegration(unittest.TestCase):
@@ -296,7 +303,9 @@ class TestIntegration(unittest.TestCase):
 
         # Apply DD
         dd_seq = DDSequence(["X", "Y", "X", "Y"])
-        padded = apply_dd_strategy(qc, DDStrategy([dd_seq]), {0: 0, 1: 1, 2: 2, 3: 3})
+        padded = apply_dd_strategy(
+            qc, DDStrategy([dd_seq]), {0: 0, 1: 1, 2: 2, 3: 3}, self.backend
+        )
 
         # Check result
         self.assertIsInstance(padded, QuantumCircuit)

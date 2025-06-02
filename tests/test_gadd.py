@@ -65,7 +65,7 @@ class TestGADD(unittest.TestCase):
         strategy = DDStrategy.from_single_sequence(sequence, n_colors=1)
 
         # Apply DD
-        padded_circuit = self.gadd.apply_dd(strategy, self.circuit)
+        padded_circuit = self.gadd.apply_strategy(strategy, self.circuit)
 
         # Check result
         self.assertIsInstance(padded_circuit, QuantumCircuit)
@@ -73,7 +73,7 @@ class TestGADD(unittest.TestCase):
 
         # Test with no backend (should use default coloring)
         gadd_no_backend = GADD()
-        padded = gadd_no_backend.apply_dd(strategy, self.circuit)
+        padded = gadd_no_backend.apply_strategy(strategy, self.circuit)
         self.assertIsInstance(padded, QuantumCircuit)
 
     def test_generate_random_sequence(self):
@@ -365,7 +365,7 @@ class TestGADDTraining(unittest.TestCase):
         sequence = DDSequence(["X", "Y", "X", "Y"])
         strategy = DDStrategy.from_single_sequence(sequence)
 
-        result = self.gadd.run(strategy, self.circuit, self.sampler)
+        result = self.gadd.evaluate(strategy, self.circuit, self.sampler)
 
         # Check result structure
         self.assertIn("counts", result)
