@@ -100,14 +100,6 @@ best_strategy, result = gadd.train(
 # Plot results
 gadd.plot_training_progress(result, save_path="training_plot.png")
 
-# Visualize the target circuit with DD sequences
-circuit_with_dd = gadd.apply_strategy(
-    strategy = best_strategy,
-    target_circuit = target_circuit,
-    backend = backend
-)
-timeline_drawer(circuit_with_dd)
-
 # Run the best sequence on the target circuit
 result = gadd.run(
     strategy = best_strategy,

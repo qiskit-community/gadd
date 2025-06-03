@@ -54,7 +54,7 @@ jobs:
 
     - name: Run flake8 linting
       run: |
-        flake8 gadd/ tests/ --max-line-length=88 --extend-ignore=E203,W503,E501,E722,E731
+        flake8 gadd/ tests/ --max-line-length=88
       continue-on-error: false
 
     - name: Run mypy type checking

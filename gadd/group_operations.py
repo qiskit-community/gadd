@@ -8,7 +8,30 @@ from dataclasses import dataclass
 
 @dataclass
 class DecouplingGroup:
-    """Definition of a decoupling group for DD sequences."""
+    """Mathematical structure defining a decoupling group for DD sequences.
+
+    This class represents the algebraic structure used in the GADD paper for
+    constructing dynamical decoupling sequences. It encodes the group elements,
+    their names, multiplication table, and inverse relationships according to
+    the Pauli group algebra extended with phase information.
+
+    The default group used in the paper is G = {Ip, Im, Xp, Xm, Yp, Ym, Zp, Zm}
+    where the subscripts p/m indicate positive/negative phase rotations on the
+    Bloch sphere. This encoding allows for systematic exploration of DD sequences
+    that maintain the group constraint of multiplying to the identity element.
+
+    Attributes:
+        elements: Mapping from element names to integer indices.
+        names: Reverse mapping from indices to element names.
+        multiplication: 2D list encoding the group multiplication table where
+            multiplication[i][j] gives the result of multiplying element i with element j.
+        inverse_map: Optional mapping from elements to their group inverses.
+
+    Example:
+        >>> group = DEFAULT_GROUP
+        >>> multiply("Xp", "Yp", group)  # Returns index for result
+        >>> group.element_name(2)  # Returns "Xp"
+    """
 
     elements: Dict[str, int]
     names: Dict[int, str]

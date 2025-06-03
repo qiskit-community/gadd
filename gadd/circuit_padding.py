@@ -2,7 +2,7 @@
 Circuit padding utilities for applying dynamical decoupling sequences.
 
 This module handles the insertion of DD pulses into quantum circuits
-during idle periods, following the approach described in the GADD paper.
+during idle periods following the approach described in the paper.
 """
 
 from typing import List, Dict, Optional
@@ -21,7 +21,18 @@ from .strategies import DDStrategy
 
 
 class DDPulse:
-    """Represents a DD pulse with timing information."""
+    """Represents a dynamical decoupling pulse with timing and gate information.
+
+    This class encapsulates the information needed to represent a single DD pulse
+    within a quantum circuit, including the gate type, target qubit, and timing
+    information. It provides conversion methods to transform the pulse representation
+    into Qiskit gate objects for circuit construction.
+
+    Args:
+        gate_name: Name of the gate to apply (e.g., "X", "Y", "Xp", "Ym").
+        qubit: Index of the target qubit for this pulse.
+        time: Timing information for when this pulse should be applied.
+    """
 
     def __init__(self, gate_name: str, qubit: int, time: float):
         self.gate_name = gate_name
@@ -29,7 +40,14 @@ class DDPulse:
         self.time = time
 
     def to_gate(self) -> Gate:
-        """Convert gate name to Qiskit gate object."""
+        """Convert gate name to Qiskit gate object.
+
+        Returns:
+            Qiskit gate object corresponding to the pulse's gate name.
+
+        Raises:
+            ValueError: If the gate name is not recognized.
+        """
         gate_map = {
             "I": IGate(),
             "Ip": IGate(),
@@ -98,7 +116,7 @@ def get_instruction_duration(
 
             if duration_dt is not None:
                 return duration_dt if unit == "dt" else duration_dt * dt
-        except:
+        except:  # noqa: E722
             pass  # Fall back to defaults
 
     # Default durations in dt units
@@ -156,7 +174,7 @@ def apply_dd_strategy(
     if backend is not None:
         try:
             instruction_durations = InstructionDurations.from_backend(backend)
-        except:  # pylint: disable=bare-except
+        except:  # noqa: E722
             instruction_durations = InstructionDurations()
     else:
         instruction_durations = InstructionDurations()

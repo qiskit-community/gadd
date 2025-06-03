@@ -140,10 +140,26 @@ class TrainingResult:
     best_sequence: DDStrategy
     best_score: float
     iteration_data: List[Dict[str, Any]]
-    comparison_data: Dict[str, float]
+    benchmark_scores: Dict[str, float]
     final_population: List[str]
     config: TrainingConfig
     training_time: float
+    benchmark_history: Optional[Dict[str, List[float]]] = (
+        None  # Only if tracked each iteration
+    )
+
+    def __post_init__(self):
+        """Extract benchmark history from iteration data."""
+        if self.iteration_data and not self.benchmark_history:
+            # Extract benchmark scores from iteration data
+            benchmarks = {}
+            for iteration in self.iteration_data:
+                if "benchmark_scores" in iteration:
+                    for name, score in iteration["benchmark_scores"].items():
+                        if name not in benchmarks:
+                            benchmarks[name] = []
+                        benchmarks[name].append(score)
+            self.benchmark_history = benchmarks
 
     def to_dict(self) -> Dict[str, Any]:
         result_dict = asdict(self)
@@ -310,7 +326,8 @@ class GADD:
         utility_function: Optional[Union[Callable, UtilityFunction]] = None,
         mode: Optional[str] = None,
         save_iterations: bool = True,
-        comparison_seqs: Optional[List[str]] = None,
+        benchmark_strategies: Optional[List[DDStrategy]] = None,
+        evaluate_benchmarks_each_iteration: bool = False,
         resume_from_state: Optional[TrainingState] = None,
         save_path: Optional[str] = None,
     ) -> Tuple[DDStrategy, TrainingResult]:
@@ -320,10 +337,13 @@ class GADD:
             sampler: Qiskit Sampler for circuit execution.
             training_circuit: Circuit to train on.
             utility_function: Function to evaluate circuit performance.
-                Can be a callable(circuit, result) -> float or a UtilityFunction instance.
+                Can be a callable(circuit, result) -> float or a :class:`.UtilityFunction` instance.
             mode: Population initialization mode ('random' or 'uniform').
             save_iterations: Whether to save iteration data.
-            comparison_seqs: Standard sequences to compare against.
+            benchmark_strategies: DD strategies to compare against. Must be a list of
+                :class:`.DDStrategy` objects.
+            evaluate_benchmarks_each_iteration: If ``True``, evaluate benchmarks at each
+                iteration. If ``False``, only evaluate at the end.
             resume_from_state: Previous training state to resume from.
             save_path: Path to save training checkpoints.
 
@@ -364,6 +384,15 @@ class GADD:
             self._training_state.population = self._initialize_population(mode)
             self._training_state.mutation_probability = self.config.mutation_probability
 
+        # Prepare benchmark strategies
+        benchmark_strategy_map = {}  # name -> DDStrategy
+        if benchmark_strategies:
+            for i, benchmark in enumerate(benchmark_strategies):
+                name = f"custom_strategy_{i}"
+                benchmark_strategy_map[name] = (benchmark, False)
+
+        benchmark_history = {} if evaluate_benchmarks_each_iteration else None
+
         # Training loop
         for iteration in range(
             self._training_state.iteration, self.config.n_iterations
@@ -374,6 +403,44 @@ class GADD:
             scores = self._evaluate_population(
                 self._training_state.population, sampler, training_circuit, utility_func
             )
+
+            # Evaluate benchmark strategies if provided
+            iteration_benchmark_scores = {}
+            if evaluate_benchmarks_each_iteration and benchmark_strategy_map:
+                print("  Evaluating benchmark strategies...")
+                for name, (strategy, staggered) in benchmark_strategy_map.items():
+                    padded_circuit = self.apply_dd(
+                        strategy, training_circuit, staggered=staggered
+                    )
+                    job = sampler.run(padded_circuit, shots=self.config.shots)
+                    result = job.result()
+
+                    # Extract result
+                    if hasattr(result, "quasi_dists"):
+                        circuit_result = type(
+                            "Result",
+                            (),
+                            {
+                                "quasi_dists": [result.quasi_dists[0]],
+                                "metadata": (
+                                    result.metadata[0]
+                                    if hasattr(result, "metadata")
+                                    else {}
+                                ),
+                            },
+                        )
+                    else:
+                        circuit_result = result
+
+                    score = utility_func(padded_circuit, circuit_result)
+                    iteration_benchmark_scores[name] = score
+
+                    # Track history
+                    if name not in benchmark_history:
+                        benchmark_history[name] = []
+                    benchmark_history[name].append(score)
+
+                    print(f"    {name}: {score:.4f}")
 
             # Track best performance
             best_score = max(scores.values())
@@ -394,7 +461,12 @@ class GADD:
                         self._training_state.population
                     ),
                 }
-                self._training_state.iteration_data.append(iteration_info)
+
+                # Only add benchmark scores if we're tracking them each iteration
+                if evaluate_benchmarks_each_iteration and iteration_benchmark_scores:
+                    iteration_info["benchmark_scores"] = iteration_benchmark_scores
+
+            self._training_state.iteration_data.append(iteration_info)
 
             # Dynamic mutation adjustment
             if self.config.dynamic_mutation and iteration > 0:
@@ -438,22 +510,52 @@ class GADD:
         best_sequence = max(final_scores, key=final_scores.get)
         best_score = final_scores[best_sequence]
 
-        # Run comparison sequences if requested
-        comparison_data = {}
-        if comparison_seqs:
-            comparison_data = self._evaluate_standard_sequences(
-                comparison_seqs, sampler, training_circuit, utility_func
-            )
-
         # Calculate training time
         training_time = time.time() - start_time
+
+        # Evaluate benchmarks at the end if not done during training
+        final_benchmark_scores = {}
+        if benchmark_strategy_map:
+            if not evaluate_benchmarks_each_iteration:
+                print("\nEvaluating benchmark strategies...")
+                for name, (strategy, staggered) in benchmark_strategy_map.items():
+                    padded_circuit = self.apply_strategy(
+                        strategy, training_circuit, staggered=staggered
+                    )
+                    job = sampler.run(padded_circuit, shots=self.config.shots)
+                    result = job.result()
+
+                    if hasattr(result, "quasi_dists"):
+                        circuit_result = type(
+                            "Result",
+                            (),
+                            {
+                                "quasi_dists": [result.quasi_dists[0]],
+                                "metadata": (
+                                    result.metadata[0]
+                                    if hasattr(result, "metadata")
+                                    else {}
+                                ),
+                            },
+                        )
+                    else:
+                        circuit_result = result
+
+                    score = utility_func(padded_circuit, circuit_result)
+                    final_benchmark_scores[name] = score
+                    print(f"  {name}: {score:.4f}")
+            else:
+                # Get final scores from history
+                for name, scores in benchmark_history.items():
+                    if scores:
+                        final_benchmark_scores[name] = scores[-1]
 
         # Create result
         result = TrainingResult(
             best_sequence=self._create_strategy_from_string(best_sequence),
             best_score=best_score,
             iteration_data=self._training_state.iteration_data,
-            comparison_data=comparison_data,
+            benchmark_scores=final_benchmark_scores,
             final_population=self._training_state.population.copy(),
             config=self.config,
             training_time=training_time,
@@ -799,15 +901,35 @@ class GADD:
         self, results: TrainingResult, save_path: Optional[str] = None
     ):
         """Plot training progression and comparison data."""
-        fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5))
+        # Determine number of subplots needed
+        n_plots = 2 if results.comparison_data else 1
+        if results.benchmark_history:
+            n_plots = 3
+
+        fig, axes = plt.subplots(1, n_plots, figsize=(6 * n_plots, 5))
+        if n_plots == 1:
+            axes = [axes]
 
         # Plot training progression
+        ax1 = axes[0]
         iterations = [d["iteration"] for d in results.iteration_data]
         best_scores = [d["best_score"] for d in results.iteration_data]
         mean_scores = [d["mean_score"] for d in results.iteration_data]
 
-        ax1.plot(iterations, best_scores, "-o", label="Best Score")
+        ax1.plot(iterations, best_scores, "-o", label="Best Score", linewidth=2)
         ax1.plot(iterations, mean_scores, "-s", label="Mean Score", alpha=0.7)
+
+        # Add benchmark lines if available
+        if results.benchmark_history:
+            for name, scores in results.benchmark_history.items():
+                ax1.plot(
+                    iterations[: len(scores)],
+                    scores,
+                    "--",
+                    label=f"{name} (benchmark)",
+                    alpha=0.6,
+                )
+
         ax1.fill_between(
             iterations,
             [d["mean_score"] - d["std_score"] for d in results.iteration_data],
@@ -822,7 +944,8 @@ class GADD:
         ax1.grid(True, alpha=0.3)
 
         # Plot comparison data
-        if results.comparison_data:
+        if results.comparison_data and n_plots >= 2:
+            ax2 = axes[1]
             names = list(results.comparison_data.keys())
             values = list(results.comparison_data.values())
 
@@ -851,6 +974,18 @@ class GADD:
                     ha="center",
                     va="bottom",
                 )
+
+        # Plot benchmark history separately if we have 3 plots
+        if results.benchmark_history and n_plots == 3:
+            ax3 = axes[2]
+            for name, scores in results.benchmark_history.items():
+                ax3.plot(iterations[: len(scores)], scores, "-o", label=name)
+
+            ax3.set_xlabel("Iteration")
+            ax3.set_ylabel("Utility Score")
+            ax3.set_title("Benchmark Performance")
+            ax3.legend()
+            ax3.grid(True, alpha=0.3)
 
         plt.tight_layout()
 
