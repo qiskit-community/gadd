@@ -196,7 +196,7 @@
   <p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../api/gadd.html">GADD Core Module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../api/sequences.html">DD Sequences</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../api/strategies.html">DD Strategies</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../api/utility_functions.html">Utility Functions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../api/group_operations.html">Group Operations</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../api/circuit_padding.html">Circuit Padding</a></li>
@@ -245,7 +245,30 @@
 <a class="viewcode-back" href="../../api/group_operations.html#gadd.group_operations.DecouplingGroup">[docs]</a>
 <span class="nd">@dataclass</span>
 <span class="k">class</span> <span class="nc">DecouplingGroup</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Definition of a decoupling group for DD sequences.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Mathematical structure defining a decoupling group for DD sequences.</span>
+
+<span class="sd">    This class represents the algebraic structure used in the GADD paper for</span>
+<span class="sd">    constructing dynamical decoupling sequences. It encodes the group elements,</span>
+<span class="sd">    their names, multiplication table, and inverse relationships according to</span>
+<span class="sd">    the Pauli group algebra extended with phase information.</span>
+
+<span class="sd">    The default group used in the paper is G = {Ip, Im, Xp, Xm, Yp, Ym, Zp, Zm}</span>
+<span class="sd">    where the subscripts p/m indicate positive/negative phase rotations on the</span>
+<span class="sd">    Bloch sphere. This encoding allows for systematic exploration of DD sequences</span>
+<span class="sd">    that maintain the group constraint of multiplying to the identity element.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        elements: Mapping from element names to integer indices.</span>
+<span class="sd">        names: Reverse mapping from indices to element names.</span>
+<span class="sd">        multiplication: 2D list encoding the group multiplication table where</span>
+<span class="sd">            multiplication[i][j] gives the result of multiplying element i with element j.</span>
+<span class="sd">        inverse_map: Optional mapping from elements to their group inverses.</span>
+
+<span class="sd">    Example:</span>
+<span class="sd">        &gt;&gt;&gt; group = DEFAULT_GROUP</span>
+<span class="sd">        &gt;&gt;&gt; multiply(&quot;Xp&quot;, &quot;Yp&quot;, group)  # Returns index for result</span>
+<span class="sd">        &gt;&gt;&gt; group.element_name(2)  # Returns &quot;Xp&quot;</span>
+<span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">elements</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span>
     <span class="n">names</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span>

@@ -3,7 +3,7 @@
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
-<link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Group Operations" href="group_operations.html" /><link rel="prev" title="DD Sequences" href="sequences.html" />
+<link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Group Operations" href="group_operations.html" /><link rel="prev" title="DD Strategies" href="strategies.html" />
 
     <!-- Generated with Sphinx 8.1.3 and Furo 2024.08.06 -->
         <title>Utility Functions - GADD 0.1.0 documentation</title>
@@ -197,7 +197,7 @@
   <p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="gadd.html">GADD Core Module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="sequences.html">DD Sequences</a></li>
+<li class="toctree-l1"><a class="reference internal" href="strategies.html">DD Strategies</a></li>
 <li class="toctree-l1 current current-page"><a class="current reference internal" href="#">Utility Functions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="group_operations.html">Group Operations</a></li>
 <li class="toctree-l1"><a class="reference internal" href="circuit_padding.html">Circuit Padding</a></li>
@@ -248,18 +248,18 @@ utility functions described in the paper.</p>
 <dt class="sig sig-object py" id="gadd.utility_functions.normalize_counts">
 <span class="sig-prename descclassname"><span class="pre">gadd.utility_functions.</span></span><span class="sig-name descname"><span class="pre">normalize_counts</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">counts</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.quantum.ibm.com/api/qiskit/qiskit.result.QuasiDistribution" title="(in Qiskit v2.0)"><span class="pre">QuasiDistribution</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.quantum.ibm.com/api/qiskit/qiskit.result.Counts" title="(in Qiskit v2.0)"><span class="pre">Counts</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.13)"><span class="pre">Dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><span class="pre">int</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><span class="pre">float</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.13)"><span class="pre">Dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><span class="pre">float</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/gadd/utility_functions.html#normalize_counts"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gadd.utility_functions.normalize_counts" title="Link to this definition">¶</a></dt>
 <dd><p>Normalize measurement counts into a standardized format.</p>
+<p>Converts various count dictionary formats into a consistent representation
+with bitstring keys and normalized probability values. Handles both integer
+and string keys, ensuring proper normalization and format standardization.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>counts</strong> – Measurement counts in various formats:
-- QuasiDistribution
-- qiskit.result.Counts
-- Dictionary mapping bitstrings or integers to counts/probabilities</p>
+<dd class="field-odd"><p><strong>counts</strong> – Measurement counts in QuasiDistribution, Counts, or dict format.</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>Dictionary mapping bitstrings to normalized probabilities.</p>
 </dd>
 <dt class="field-odd">Raises<span class="colon">:</span></dt>
-<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#ValueError" title="(in Python v3.13)"><strong>ValueError</strong></a> – If counts format is invalid or empty.</p>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#ValueError" title="(in Python v3.13)"><strong>ValueError</strong></a> – If counts format is invalid, empty, or total is non-positive.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -268,7 +268,17 @@ utility functions described in the paper.</p>
 <dt class="sig sig-object py" id="gadd.utility_functions.UtilityFunction">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">gadd.utility_functions.</span></span><span class="sig-name descname"><span class="pre">UtilityFunction</span></span><a class="reference internal" href="../_modules/gadd/utility_functions.html#UtilityFunction"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gadd.utility_functions.UtilityFunction" title="Link to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/abc.html#abc.ABC" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">ABC</span></code></a></p>
-<p>Abstract base class for DD utility functions.</p>
+<p>Abstract base class for DD utility functions used in GADD optimization.</p>
+<p>Utility functions quantify the performance of dynamical decoupling sequences
+by analyzing the measurement outcomes from quantum circuits. They serve as
+the fitness function for the genetic algorithm, guiding the search toward
+sequences that maximize computational fidelity or other performance metrics.</p>
+<p>The utility function takes measurement counts in various formats and returns
+a scalar score between 0 and 1, where higher values indicate better
+performance. The specific computation depends on the target application
+and desired error suppression goals.</p>
+<p>Subclasses must implement the abstract methods to define how measurement
+outcomes are processed and scored for their specific use case.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="gadd.utility_functions.UtilityFunction.compute">
 <em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">compute</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">counts</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.quantum.ibm.com/api/qiskit/qiskit.result.QuasiDistribution" title="(in Qiskit v2.0)"><span class="pre">QuasiDistribution</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.quantum.ibm.com/api/qiskit/qiskit.result.Counts" title="(in Qiskit v2.0)"><span class="pre">Counts</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.13)"><span class="pre">Dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><span class="pre">int</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><span class="pre">float</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><span class="pre">float</span></a></span></span><a class="reference internal" href="../_modules/gadd/utility_functions.html#UtilityFunction.compute"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gadd.utility_functions.UtilityFunction.compute" title="Link to this definition">¶</a></dt>
@@ -304,16 +314,32 @@ utility functions described in the paper.</p>
 <dt class="sig sig-object py" id="gadd.utility_functions.SuccessProbability">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">gadd.utility_functions.</span></span><span class="sig-name descname"><span class="pre">SuccessProbability</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">target_state</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><span class="pre">int</span></a></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gadd/utility_functions.html#SuccessProbability"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gadd.utility_functions.SuccessProbability" title="Link to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#gadd.utility_functions.UtilityFunction" title="gadd.utility_functions.UtilityFunction"><code class="xref py py-class docutils literal notranslate"><span class="pre">UtilityFunction</span></code></a></p>
-<p>Utility function based on success probability of measuring a target state.</p>
+<p>Utility function measuring success probability for a target quantum state.</p>
+<p>This utility function evaluates DD sequence performance by calculating the
+probability of measuring a specific target state. It is particularly useful
+for oracular algorithms like Bernstein-Vazirani where the ideal outcome is
+a single known bitstring, and higher success probability indicates better
+error suppression.</p>
+<p>The function normalizes measurement counts and returns the probability of
+observing the target state. This provides a direct measure of computational
+success that can guide the genetic algorithm toward sequences that preserve
+the desired quantum computation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>target_state</strong> – Expected quantum state as binary string or integer.
+For integer inputs, the value is converted to binary representation.</p>
+</dd>
+</dl>
+<p class="rubric">Example</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">utility</span> <span class="o">=</span> <span class="n">SuccessProbability</span><span class="p">(</span><span class="s2">&quot;101&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">score</span> <span class="o">=</span> <span class="n">utility</span><span class="o">.</span><span class="n">compute</span><span class="p">(</span><span class="n">measurement_counts</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Returns probability of measuring |101⟩ state</span>
+</pre></div>
+</div>
 <dl class="py method">
 <dt class="sig sig-object py" id="gadd.utility_functions.SuccessProbability.__init__">
 <span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">target_state</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><span class="pre">int</span></a></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gadd/utility_functions.html#SuccessProbability.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gadd.utility_functions.SuccessProbability.__init__" title="Link to this definition">¶</a></dt>
-<dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>target_state</strong> – Expected quantum state (binary string or integer)</p>
-</dd>
-</dl>
-</dd></dl>
+<dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="gadd.utility_functions.SuccessProbability.compute">
@@ -347,16 +373,35 @@ utility functions described in the paper.</p>
 <dt class="sig sig-object py" id="gadd.utility_functions.OneNormDistance">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">gadd.utility_functions.</span></span><span class="sig-name descname"><span class="pre">OneNormDistance</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ideal_distribution</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.13)"><span class="pre">Dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><span class="pre">int</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><span class="pre">float</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gadd/utility_functions.html#OneNormDistance"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gadd.utility_functions.OneNormDistance" title="Link to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#gadd.utility_functions.UtilityFunction" title="gadd.utility_functions.UtilityFunction"><code class="xref py py-class docutils literal notranslate"><span class="pre">UtilityFunction</span></code></a></p>
-<p>Utility function based on 1-norm distance to ideal distribution.</p>
+<p>Utility function based on 1-norm distance to an ideal probability distribution.</p>
+<p>This utility function measures DD sequence performance by comparing the observed
+measurement distribution to an ideal target distribution. It computes the
+1-norm (total variation) distance and returns 1 minus half the distance,
+normalized to [0,1] where 1 indicates perfect agreement.</p>
+<p>This metric is particularly useful for quantum state preparation tasks where
+the ideal outcome is a known probability distribution over measurement outcomes,
+such as GHZ states or other entangled states with well-defined measurement
+statistics.</p>
+<p>The 1-norm distance is calculated as: Σ|p_ideal(k) - p_observed(k)| over all
+possible measurement outcomes k, providing a comprehensive measure of
+distributional fidelity.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>ideal_distribution</strong> – Target probability distribution mapping states to
+their ideal probabilities. States can be specified as binary strings
+or integers.</p>
+</dd>
+</dl>
+<p class="rubric">Example</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">ideal</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;000&quot;</span><span class="p">:</span> <span class="mf">0.5</span><span class="p">,</span> <span class="s2">&quot;111&quot;</span><span class="p">:</span> <span class="mf">0.5</span><span class="p">}</span>  <span class="c1"># GHZ state</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">utility</span> <span class="o">=</span> <span class="n">OneNormDistance</span><span class="p">(</span><span class="n">ideal</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">score</span> <span class="o">=</span> <span class="n">utility</span><span class="o">.</span><span class="n">compute</span><span class="p">(</span><span class="n">measurement_counts</span><span class="p">)</span>
+</pre></div>
+</div>
 <dl class="py method">
 <dt class="sig sig-object py" id="gadd.utility_functions.OneNormDistance.__init__">
 <span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ideal_distribution</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.13)"><span class="pre">Dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><span class="pre">int</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><span class="pre">float</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gadd/utility_functions.html#OneNormDistance.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gadd.utility_functions.OneNormDistance.__init__" title="Link to this definition">¶</a></dt>
-<dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>ideal_distribution</strong> – Mapping of states to their ideal probabilities</p>
-</dd>
-</dl>
-</dd></dl>
+<dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="gadd.utility_functions.OneNormDistance.compute">
@@ -390,16 +435,33 @@ utility functions described in the paper.</p>
 <dt class="sig sig-object py" id="gadd.utility_functions.GHZUtility">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">gadd.utility_functions.</span></span><span class="sig-name descname"><span class="pre">GHZUtility</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n_qubits</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><span class="pre">int</span></a></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gadd/utility_functions.html#GHZUtility"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gadd.utility_functions.GHZUtility" title="Link to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#gadd.utility_functions.OneNormDistance" title="gadd.utility_functions.OneNormDistance"><code class="xref py py-class docutils literal notranslate"><span class="pre">OneNormDistance</span></code></a></p>
-<p>Specialized utility function for GHZ states.</p>
+<p>Specialized utility function for Greenberger-Horne-Zeilinger state preparation.</p>
+<p>This utility function is optimized for evaluating DD sequence performance on
+GHZ state preparation circuits. GHZ states are maximally entangled states of
+the form (<a href="#id1"><span class="problematic" id="id2">|</span></a>00…0⟩ + <a href="#id3"><span class="problematic" id="id4">|</span></a>11…1⟩)/√2, which should ideally produce equal
+probability of measuring all-zero or all-one bitstrings.</p>
+<p>The function automatically constructs the ideal GHZ distribution for the
+specified number of qubits and uses the 1-norm distance metric to evaluate
+how well the observed measurements match this target distribution. This
+provides a specialized utility function for one of the key benchmarking
+tasks described in the GADD paper.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>n_qubits</strong> – Number of qubits in the GHZ state preparation circuit.</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#ValueError" title="(in Python v3.13)"><strong>ValueError</strong></a> – If n_qubits is not positive.</p>
+</dd>
+</dl>
+<p class="rubric">Example</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">utility</span> <span class="o">=</span> <span class="n">GHZUtility</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>  <span class="c1"># For 3-qubit GHZ state</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Expects 50% probability each for |000⟩ and |111⟩</span>
+</pre></div>
+</div>
 <dl class="py method">
 <dt class="sig sig-object py" id="gadd.utility_functions.GHZUtility.__init__">
 <span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n_qubits</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><span class="pre">int</span></a></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gadd/utility_functions.html#GHZUtility.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gadd.utility_functions.GHZUtility.__init__" title="Link to this definition">¶</a></dt>
-<dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>n_qubits</strong> – Number of qubits in GHZ state</p>
-</dd>
-</dl>
-</dd></dl>
+<dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="gadd.utility_functions.GHZUtility.get_name">
@@ -419,19 +481,33 @@ utility functions described in the paper.</p>
 <dt class="sig sig-object py" id="gadd.utility_functions.CustomUtility">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">gadd.utility_functions.</span></span><span class="sig-name descname"><span class="pre">CustomUtility</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">function</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Callable" title="(in Python v3.13)"><span class="pre">Callable</span></a><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.13)"><span class="pre">Dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><span class="pre">float</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><span class="pre">float</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'Custom</span> <span class="pre">Utility'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gadd/utility_functions.html#CustomUtility"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gadd.utility_functions.CustomUtility" title="Link to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#gadd.utility_functions.UtilityFunction" title="gadd.utility_functions.UtilityFunction"><code class="xref py py-class docutils literal notranslate"><span class="pre">UtilityFunction</span></code></a></p>
-<p>Wrapper for custom utility functions provided by users.</p>
-<dl class="py method">
-<dt class="sig sig-object py" id="gadd.utility_functions.CustomUtility.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">function</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Callable" title="(in Python v3.13)"><span class="pre">Callable</span></a><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.13)"><span class="pre">Dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><span class="pre">float</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><span class="pre">float</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'Custom</span> <span class="pre">Utility'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gadd/utility_functions.html#CustomUtility.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gadd.utility_functions.CustomUtility.__init__" title="Link to this definition">¶</a></dt>
-<dd><dl class="field-list simple">
+<p>Wrapper for user-defined custom utility functions.</p>
+<p>This class allows users to provide their own utility functions for specialized
+applications beyond the standard use cases. The custom function receives
+normalized measurement counts as a dictionary mapping bitstrings to probabilities
+and should return a scalar utility value.</p>
+<p>This flexibility enables GADD optimization for novel quantum algorithms or
+specialized error suppression goals not covered by the built-in utility
+functions. The custom function should be deterministic and return values
+in a consistent range to ensure proper genetic algorithm convergence.</p>
+<dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>function</strong> – Custom function that takes normalized counts and returns utility value</p></li>
-<li><p><strong>name</strong> – Optional name for the utility function</p></li>
+<li><p><strong>function</strong> – Custom function taking normalized counts dict and returning float.</p></li>
+<li><p><strong>name</strong> – Optional descriptive name for the utility function.</p></li>
 </ul>
 </dd>
 </dl>
-</dd></dl>
+<p class="rubric">Example</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">def</span> <span class="nf">my_utility</span><span class="p">(</span><span class="n">counts</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="k">return</span> <span class="n">counts</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;000&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="o">+</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">counts</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;001&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">utility</span> <span class="o">=</span> <span class="n">CustomUtility</span><span class="p">(</span><span class="n">my_utility</span><span class="p">,</span> <span class="s2">&quot;Custom Weighting&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<dl class="py method">
+<dt class="sig sig-object py" id="gadd.utility_functions.CustomUtility.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">function</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Callable" title="(in Python v3.13)"><span class="pre">Callable</span></a><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.13)"><span class="pre">Dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><span class="pre">float</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><span class="pre">float</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'Custom</span> <span class="pre">Utility'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gadd/utility_functions.html#CustomUtility.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gadd.utility_functions.CustomUtility.__init__" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="gadd.utility_functions.CustomUtility.compute">
@@ -457,7 +533,23 @@ utility functions described in the paper.</p>
 <dt class="sig sig-object py" id="gadd.utility_functions.UtilityFactory">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">gadd.utility_functions.</span></span><span class="sig-name descname"><span class="pre">UtilityFactory</span></span><a class="reference internal" href="../_modules/gadd/utility_functions.html#UtilityFactory"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gadd.utility_functions.UtilityFactory" title="Link to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
-<p>Factory class for creating common utility functions.</p>
+<p>Factory class providing convenient creation methods for common utility functions.</p>
+<p>This factory simplifies the instantiation of utility functions for common
+use cases in dynamical decoupling optimization. It provides static methods
+that encapsulate the parameter setup for standard utility functions, reducing
+boilerplate code and potential configuration errors.</p>
+<p>The factory methods correspond to the main experimental scenarios described
+in the GADD paper: success probability for oracular algorithms, 1-norm
+distance for state preparation tasks, GHZ state fidelity for entanglement
+benchmarks, and custom functions for specialized applications.</p>
+<p class="rubric">Example</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Create utility for Bernstein-Vazirani with target &quot;101&quot;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">utility</span> <span class="o">=</span> <span class="n">UtilityFactory</span><span class="o">.</span><span class="n">success_probability</span><span class="p">(</span><span class="s2">&quot;101&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Create utility for 4-qubit GHZ state</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ghz_utility</span> <span class="o">=</span> <span class="n">UtilityFactory</span><span class="o">.</span><span class="n">ghz_state</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>
+</pre></div>
+</div>
 <dl class="py method">
 <dt class="sig sig-object py" id="gadd.utility_functions.UtilityFactory.success_probability">
 <em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">success_probability</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">target_state</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><span class="pre">int</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#gadd.utility_functions.UtilityFunction" title="gadd.utility_functions.UtilityFunction"><span class="pre">UtilityFunction</span></a></span></span><a class="reference internal" href="../_modules/gadd/utility_functions.html#UtilityFactory.success_probability"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gadd.utility_functions.UtilityFactory.success_probability" title="Link to this definition">¶</a></dt>
@@ -500,14 +592,14 @@ utility functions described in the paper.</p>
               </div>
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
             </a>
-          <a class="prev-page" href="sequences.html">
+          <a class="prev-page" href="strategies.html">
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
               <div class="page-info">
                 <div class="context">
                   <span>Previous</span>
                 </div>
                 
-                <div class="title">DD Sequences</div>
+                <div class="title">DD Strategies</div>
                 
               </div>
             </a>

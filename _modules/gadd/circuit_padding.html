@@ -196,7 +196,7 @@
   <p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../api/gadd.html">GADD Core Module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../api/sequences.html">DD Sequences</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../api/strategies.html">DD Strategies</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../api/utility_functions.html">Utility Functions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../api/group_operations.html">Group Operations</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../api/circuit_padding.html">Circuit Padding</a></li>
@@ -237,12 +237,12 @@
 <span class="sd">Circuit padding utilities for applying dynamical decoupling sequences.</span>
 
 <span class="sd">This module handles the insertion of DD pulses into quantum circuits</span>
-<span class="sd">during idle periods, following the approach described in the GADD paper.</span>
+<span class="sd">during idle periods following the approach described in the paper.</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Optional</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">from</span> <span class="nn">qiskit</span> <span class="kn">import</span> <span class="n">QuantumCircuit</span>
+<span class="kn">from</span> <span class="nn">qiskit</span> <span class="kn">import</span> <span class="n">QuantumCircuit</span><span class="p">,</span> <span class="n">transpile</span>
 <span class="kn">from</span> <span class="nn">qiskit.providers</span> <span class="kn">import</span> <span class="n">BackendV2</span> <span class="k">as</span> <span class="n">Backend</span>
 <span class="kn">from</span> <span class="nn">qiskit.circuit</span> <span class="kn">import</span> <span class="n">Instruction</span><span class="p">,</span> <span class="n">Gate</span><span class="p">,</span> <span class="n">Delay</span>
 <span class="kn">from</span> <span class="nn">qiskit.circuit.library</span> <span class="kn">import</span> <span class="n">IGate</span><span class="p">,</span> <span class="n">RXGate</span><span class="p">,</span> <span class="n">RYGate</span><span class="p">,</span> <span class="n">RZGate</span>
@@ -258,7 +258,18 @@
 <div class="viewcode-block" id="DDPulse">
 <a class="viewcode-back" href="../../api/circuit_padding.html#gadd.circuit_padding.DDPulse">[docs]</a>
 <span class="k">class</span> <span class="nc">DDPulse</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Represents a DD pulse with timing information.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Represents a dynamical decoupling pulse with timing and gate information.</span>
+
+<span class="sd">    This class encapsulates the information needed to represent a single DD pulse</span>
+<span class="sd">    within a quantum circuit, including the gate type, target qubit, and timing</span>
+<span class="sd">    information. It provides conversion methods to transform the pulse representation</span>
+<span class="sd">    into Qiskit gate objects for circuit construction.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        gate_name: Name of the gate to apply (e.g., &quot;X&quot;, &quot;Y&quot;, &quot;Xp&quot;, &quot;Ym&quot;).</span>
+<span class="sd">        qubit: Index of the target qubit for this pulse.</span>
+<span class="sd">        time: Timing information for when this pulse should be applied.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
 
 <div class="viewcode-block" id="DDPulse.__init__">
 <a class="viewcode-back" href="../../api/circuit_padding.html#gadd.circuit_padding.DDPulse.__init__">[docs]</a>
@@ -271,7 +282,14 @@
 <div class="viewcode-block" id="DDPulse.to_gate">
 <a class="viewcode-back" href="../../api/circuit_padding.html#gadd.circuit_padding.DDPulse.to_gate">[docs]</a>
     <span class="k">def</span> <span class="nf">to_gate</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Gate</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Convert gate name to Qiskit gate object.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Convert gate name to Qiskit gate object.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Qiskit gate object corresponding to the pulse&#39;s gate name.</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            ValueError: If the gate name is not recognized.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">gate_map</span> <span class="o">=</span> <span class="p">{</span>
             <span class="s2">&quot;I&quot;</span><span class="p">:</span> <span class="n">IGate</span><span class="p">(),</span>
             <span class="s2">&quot;Ip&quot;</span><span class="p">:</span> <span class="n">IGate</span><span class="p">(),</span>
@@ -344,7 +362,7 @@
 
             <span class="k">if</span> <span class="n">duration_dt</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="k">return</span> <span class="n">duration_dt</span> <span class="k">if</span> <span class="n">unit</span> <span class="o">==</span> <span class="s2">&quot;dt&quot;</span> <span class="k">else</span> <span class="n">duration_dt</span> <span class="o">*</span> <span class="n">dt</span>
-        <span class="k">except</span><span class="p">:</span>
+        <span class="k">except</span><span class="p">:</span>  <span class="c1"># noqa: E722</span>
             <span class="k">pass</span>  <span class="c1"># Fall back to defaults</span>
 
     <span class="c1"># Default durations in dt units</span>
@@ -384,43 +402,39 @@
     <span class="n">circuit</span><span class="p">:</span> <span class="n">QuantumCircuit</span><span class="p">,</span>
     <span class="n">strategy</span><span class="p">:</span> <span class="n">DDStrategy</span><span class="p">,</span>
     <span class="n">coloring</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span>
-    <span class="n">backend</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="s2">&quot;Backend&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="n">instruction_durations</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">InstructionDurations</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="n">min_idle_duration</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">64</span><span class="p">,</span>
+    <span class="n">backend</span><span class="p">:</span> <span class="n">Backend</span><span class="p">,</span>
     <span class="n">staggered</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="o">**</span><span class="n">dd_options</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">],</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">QuantumCircuit</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Apply a DD strategy to a quantum circuit using Qiskit&#39;s PadDynamicalDecoupling.</span>
+<span class="sd">    Apply a DD strategy to a quantum circuit using ``PadDynamicalDecoupling``.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        circuit: Original quantum circuit.</span>
 <span class="sd">        strategy: DD strategy containing sequences for each color.</span>
 <span class="sd">        coloring: Mapping from qubit to color.</span>
-<span class="sd">        backend: Optional backend for extracting instruction durations.</span>
-<span class="sd">        instruction_durations: Backend-specific instruction durations.</span>
-<span class="sd">        min_idle_duration: Minimum idle duration to insert DD.</span>
+<span class="sd">        backend: Backend to execute circuit on.</span>
 <span class="sd">        staggered: Whether to apply CR-aware staggering for crosstalk suppression.</span>
+<span class="sd">        dd_options: Additionl options to pass to ``PadDynamicalDecoupling``.</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        Circuit with DD strategy applied.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="c1"># Create a copy of the circuit</span>
-    <span class="n">padded_circuit</span> <span class="o">=</span> <span class="n">circuit</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">backend</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">instruction_durations</span> <span class="o">=</span> <span class="n">InstructionDurations</span><span class="o">.</span><span class="n">from_backend</span><span class="p">(</span><span class="n">backend</span><span class="p">)</span>
+        <span class="k">except</span><span class="p">:</span>  <span class="c1"># noqa: E722</span>
+            <span class="n">instruction_durations</span> <span class="o">=</span> <span class="n">InstructionDurations</span><span class="p">()</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">instruction_durations</span> <span class="o">=</span> <span class="n">InstructionDurations</span><span class="p">()</span>
+
+    <span class="c1"># Transpile the circuit itself first</span>
+    <span class="n">padded_circuit</span> <span class="o">=</span> <span class="n">transpile</span><span class="p">(</span><span class="n">circuit</span><span class="p">,</span> <span class="n">backend</span><span class="p">)</span>
     <span class="n">suffix</span> <span class="o">=</span> <span class="s2">&quot;_DD_staggered&quot;</span> <span class="k">if</span> <span class="n">staggered</span> <span class="k">else</span> <span class="s2">&quot;_DD&quot;</span>
     <span class="n">padded_circuit</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="p">(</span>
         <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">circuit</span><span class="o">.</span><span class="n">name</span><span class="si">}{</span><span class="n">suffix</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">if</span> <span class="n">circuit</span><span class="o">.</span><span class="n">name</span> <span class="k">else</span> <span class="sa">f</span><span class="s2">&quot;circuit</span><span class="si">{</span><span class="n">suffix</span><span class="si">}</span><span class="s2">&quot;</span>
     <span class="p">)</span>
-
-    <span class="c1"># Get default durations if not provided</span>
-    <span class="k">if</span> <span class="n">instruction_durations</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="k">if</span> <span class="n">backend</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">try</span><span class="p">:</span>
-                <span class="n">instruction_durations</span> <span class="o">=</span> <span class="n">InstructionDurations</span><span class="o">.</span><span class="n">from_backend</span><span class="p">(</span><span class="n">backend</span><span class="p">)</span>
-            <span class="k">except</span><span class="p">:</span>
-                <span class="n">instruction_durations</span> <span class="o">=</span> <span class="n">InstructionDurations</span><span class="p">()</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">instruction_durations</span> <span class="o">=</span> <span class="n">InstructionDurations</span><span class="p">()</span>
-
+    <span class="nb">print</span><span class="p">(</span><span class="n">padded_circuit</span><span class="p">)</span>
     <span class="c1"># Get unique colors and sort them</span>
     <span class="n">unique_colors</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">coloring</span><span class="o">.</span><span class="n">values</span><span class="p">()))</span>
 
@@ -456,6 +470,9 @@
         <span class="c1"># Get qubits for this color</span>
         <span class="n">qubits_for_color</span> <span class="o">=</span> <span class="p">[</span><span class="n">q</span> <span class="k">for</span> <span class="n">q</span><span class="p">,</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">coloring</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">c</span> <span class="o">==</span> <span class="n">color</span><span class="p">]</span>
 
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">qubits_for_color</span><span class="p">:</span>
+            <span class="k">continue</span>
+
         <span class="c1"># Get DD sequence for this color</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="n">dd_sequence</span> <span class="o">=</span> <span class="n">strategy</span><span class="o">.</span><span class="n">get_sequence</span><span class="p">(</span><span class="n">color</span><span class="p">)</span>
@@ -464,17 +481,13 @@
             <span class="k">continue</span>
 
         <span class="c1"># Convert sequence gates to Qiskit gates</span>
-        <span class="c1"># Include identity gates as Delay operations to maintain sequence structure</span>
         <span class="n">dd_gates</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">gate_name</span> <span class="ow">in</span> <span class="n">dd_sequence</span><span class="o">.</span><span class="n">gates</span><span class="p">:</span>
-            <span class="n">pulse</span> <span class="o">=</span> <span class="n">DDPulse</span><span class="p">(</span><span class="n">gate_name</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>  <span class="c1"># Qubit and time don&#39;t matter here</span>
-            <span class="n">dd_gates</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">pulse</span><span class="o">.</span><span class="n">to_gate</span><span class="p">())</span>
+            <span class="k">if</span> <span class="n">gate_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;I&quot;</span><span class="p">,</span> <span class="s2">&quot;Ip&quot;</span><span class="p">,</span> <span class="s2">&quot;Im&quot;</span><span class="p">]:</span>  <span class="c1"># Skip identity gates</span>
+                <span class="n">pulse</span> <span class="o">=</span> <span class="n">DDPulse</span><span class="p">(</span><span class="n">gate_name</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>  <span class="c1"># Qubit and time don&#39;t matter here</span>
+                <span class="n">dd_gates</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">pulse</span><span class="o">.</span><span class="n">to_gate</span><span class="p">())</span>
 
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">dd_gates</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">dd_gates</span><span class="p">)</span> <span class="o">%</span> <span class="mi">2</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
-            <span class="c1"># Skip sequences that don&#39;t have even number of gates</span>
-            <span class="nb">print</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;Warning: Skipping DD sequence for color </span><span class="si">{</span><span class="n">color</span><span class="si">}</span><span class="s2"> - odd number of gates (</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">dd_gates</span><span class="p">)</span><span class="si">}</span><span class="s2">)&quot;</span>
-            <span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">dd_gates</span><span class="p">:</span>
             <span class="k">continue</span>
 
         <span class="c1"># Get spacing for this color if staggered</span>
@@ -490,12 +503,12 @@
                     <span class="n">durations</span><span class="o">=</span><span class="n">instruction_durations</span><span class="p">,</span>
                     <span class="n">dd_sequences</span><span class="o">=</span><span class="n">dd_gates</span><span class="p">,</span>
                     <span class="n">qubits</span><span class="o">=</span><span class="n">qubits_for_color</span><span class="p">,</span>
-                    <span class="n">pulse_alignment</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
-                    <span class="n">sequence_min_length_ratios</span><span class="o">=</span><span class="p">[</span><span class="n">min_idle_duration</span><span class="p">],</span>
+                    <span class="c1"># pulse_alignment=pulse_alignment,</span>
                     <span class="n">insert_multiple_cycles</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
                     <span class="n">coupling_map</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                     <span class="n">alt_spacings</span><span class="o">=</span><span class="n">alt_spacings</span><span class="p">,</span>
                     <span class="n">skip_reset_qubits</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                    <span class="o">**</span><span class="n">dd_options</span><span class="p">,</span>
                 <span class="p">),</span>
             <span class="p">]</span>
         <span class="p">)</span>

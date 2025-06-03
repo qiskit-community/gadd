@@ -196,7 +196,7 @@
   <p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../api/gadd.html">GADD Core Module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../api/sequences.html">DD Sequences</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../api/strategies.html">DD Strategies</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../api/utility_functions.html">Utility Functions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../api/group_operations.html">Group Operations</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../api/circuit_padding.html">Circuit Padding</a></li>
@@ -398,10 +398,29 @@
     <span class="n">best_sequence</span><span class="p">:</span> <span class="n">DDStrategy</span>
     <span class="n">best_score</span><span class="p">:</span> <span class="nb">float</span>
     <span class="n">iteration_data</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span>
-    <span class="n">comparison_data</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span>
+    <span class="n">benchmark_scores</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span>
     <span class="n">final_population</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
     <span class="n">config</span><span class="p">:</span> <span class="n">TrainingConfig</span>
     <span class="n">training_time</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">benchmark_history</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]]]</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="kc">None</span>  <span class="c1"># Only if tracked each iteration</span>
+    <span class="p">)</span>
+
+<div class="viewcode-block" id="TrainingResult.__post_init__">
+<a class="viewcode-back" href="../../api/gadd.html#gadd.gadd.TrainingResult.__post_init__">[docs]</a>
+    <span class="k">def</span> <span class="nf">__post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Extract benchmark history from iteration data.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">iteration_data</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">benchmark_history</span><span class="p">:</span>
+            <span class="c1"># Extract benchmark scores from iteration data</span>
+            <span class="n">benchmarks</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="k">for</span> <span class="n">iteration</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">iteration_data</span><span class="p">:</span>
+                <span class="k">if</span> <span class="s2">&quot;benchmark_scores&quot;</span> <span class="ow">in</span> <span class="n">iteration</span><span class="p">:</span>
+                    <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">score</span> <span class="ow">in</span> <span class="n">iteration</span><span class="p">[</span><span class="s2">&quot;benchmark_scores&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                        <span class="k">if</span> <span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">benchmarks</span><span class="p">:</span>
+                            <span class="n">benchmarks</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+                        <span class="n">benchmarks</span><span class="p">[</span><span class="n">name</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">score</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">benchmark_history</span> <span class="o">=</span> <span class="n">benchmarks</span></div>
+
 
 <div class="viewcode-block" id="TrainingResult.to_dict">
 <a class="viewcode-back" href="../../api/gadd.html#gadd.gadd.TrainingResult.to_dict">[docs]</a>
@@ -529,9 +548,9 @@
                 <span class="s2">&quot;Coloring must be a dictionary, ColorAssignment instance, or None&quot;</span>
             <span class="p">)</span>
 
-<div class="viewcode-block" id="GADD.apply_dd">
-<a class="viewcode-back" href="../../api/gadd.html#gadd.gadd.GADD.apply_dd">[docs]</a>
-    <span class="k">def</span> <span class="nf">apply_dd</span><span class="p">(</span>
+<div class="viewcode-block" id="GADD.apply_strategy">
+<a class="viewcode-back" href="../../api/gadd.html#gadd.gadd.GADD.apply_strategy">[docs]</a>
+    <span class="k">def</span> <span class="nf">apply_strategy</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">strategy</span><span class="p">:</span> <span class="n">DDStrategy</span><span class="p">,</span>
         <span class="n">target_circuit</span><span class="p">:</span> <span class="n">QuantumCircuit</span><span class="p">,</span>
@@ -556,8 +575,6 @@
         <span class="c1"># Use provided backend or fall back to instance backend</span>
         <span class="n">backend</span> <span class="o">=</span> <span class="n">backend</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">_backend</span>
 
-        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;strategy&quot;</span><span class="p">,</span> <span class="n">strategy</span><span class="p">)</span>
-
         <span class="c1"># Get coloring for the circuit</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_coloring</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">coloring_dict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_coloring</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()</span>
@@ -568,24 +585,12 @@
             <span class="c1"># Fallback: all qubits same color</span>
             <span class="n">coloring_dict</span> <span class="o">=</span> <span class="p">{</span><span class="n">i</span><span class="p">:</span> <span class="mi">0</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">target_circuit</span><span class="o">.</span><span class="n">num_qubits</span><span class="p">)}</span>
 
-        <span class="c1"># Get instruction durations from backend if available</span>
-        <span class="n">instruction_durations</span> <span class="o">=</span> <span class="kc">None</span>
-        <span class="k">if</span> <span class="n">backend</span><span class="p">:</span>
-            <span class="k">try</span><span class="p">:</span>
-                <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">backend</span><span class="p">,</span> <span class="s2">&quot;instruction_durations&quot;</span><span class="p">):</span>
-                    <span class="n">instruction_durations</span> <span class="o">=</span> <span class="n">backend</span><span class="o">.</span><span class="n">instruction_durations</span>
-                <span class="k">else</span><span class="p">:</span>
-                    <span class="n">instruction_durations</span> <span class="o">=</span> <span class="n">InstructionDurations</span><span class="o">.</span><span class="n">from_backend</span><span class="p">(</span><span class="n">backend</span><span class="p">)</span>
-            <span class="k">except</span><span class="p">:</span>
-                <span class="k">pass</span>
-
         <span class="c1"># Apply the DD strategy</span>
         <span class="k">return</span> <span class="n">_apply_dd_strategy</span><span class="p">(</span>
             <span class="n">target_circuit</span><span class="p">,</span>
             <span class="n">strategy</span><span class="p">,</span>
             <span class="n">coloring_dict</span><span class="p">,</span>
             <span class="n">backend</span><span class="o">=</span><span class="n">backend</span><span class="p">,</span>
-            <span class="n">instruction_durations</span><span class="o">=</span><span class="n">instruction_durations</span><span class="p">,</span>
             <span class="n">staggered</span><span class="o">=</span><span class="n">staggered</span><span class="p">,</span>
         <span class="p">)</span></div>
 
@@ -599,7 +604,8 @@
         <span class="n">utility_function</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">Callable</span><span class="p">,</span> <span class="n">UtilityFunction</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">mode</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">save_iterations</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
-        <span class="n">comparison_seqs</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">benchmark_strategies</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">DDStrategy</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">evaluate_benchmarks_each_iteration</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
         <span class="n">resume_from_state</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">TrainingState</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">save_path</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">DDStrategy</span><span class="p">,</span> <span class="n">TrainingResult</span><span class="p">]:</span>
@@ -609,10 +615,13 @@
 <span class="sd">            sampler: Qiskit Sampler for circuit execution.</span>
 <span class="sd">            training_circuit: Circuit to train on.</span>
 <span class="sd">            utility_function: Function to evaluate circuit performance.</span>
-<span class="sd">                Can be a callable(circuit, result) -&gt; float or a UtilityFunction instance.</span>
+<span class="sd">                Can be a callable(circuit, result) -&gt; float or a :class:`.UtilityFunction` instance.</span>
 <span class="sd">            mode: Population initialization mode (&#39;random&#39; or &#39;uniform&#39;).</span>
 <span class="sd">            save_iterations: Whether to save iteration data.</span>
-<span class="sd">            comparison_seqs: Standard sequences to compare against.</span>
+<span class="sd">            benchmark_strategies: DD strategies to compare against. Must be a list of</span>
+<span class="sd">                :class:`.DDStrategy` objects.</span>
+<span class="sd">            evaluate_benchmarks_each_iteration: If ``True``, evaluate benchmarks at each</span>
+<span class="sd">                iteration. If ``False``, only evaluate at the end.</span>
 <span class="sd">            resume_from_state: Previous training state to resume from.</span>
 <span class="sd">            save_path: Path to save training checkpoints.</span>
 
@@ -653,6 +662,15 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">_training_state</span><span class="o">.</span><span class="n">population</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_initialize_population</span><span class="p">(</span><span class="n">mode</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_training_state</span><span class="o">.</span><span class="n">mutation_probability</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">mutation_probability</span>
 
+        <span class="c1"># Prepare benchmark strategies</span>
+        <span class="n">benchmark_strategy_map</span> <span class="o">=</span> <span class="p">{}</span>  <span class="c1"># name -&gt; DDStrategy</span>
+        <span class="k">if</span> <span class="n">benchmark_strategies</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">benchmark</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">benchmark_strategies</span><span class="p">):</span>
+                <span class="n">name</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;custom_strategy_</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="n">benchmark_strategy_map</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">benchmark</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+
+        <span class="n">benchmark_history</span> <span class="o">=</span> <span class="p">{}</span> <span class="k">if</span> <span class="n">evaluate_benchmarks_each_iteration</span> <span class="k">else</span> <span class="kc">None</span>
+
         <span class="c1"># Training loop</span>
         <span class="k">for</span> <span class="n">iteration</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_training_state</span><span class="o">.</span><span class="n">iteration</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">n_iterations</span>
@@ -663,6 +681,44 @@
             <span class="n">scores</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_evaluate_population</span><span class="p">(</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_training_state</span><span class="o">.</span><span class="n">population</span><span class="p">,</span> <span class="n">sampler</span><span class="p">,</span> <span class="n">training_circuit</span><span class="p">,</span> <span class="n">utility_func</span>
             <span class="p">)</span>
+
+            <span class="c1"># Evaluate benchmark strategies if provided</span>
+            <span class="n">iteration_benchmark_scores</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="k">if</span> <span class="n">evaluate_benchmarks_each_iteration</span> <span class="ow">and</span> <span class="n">benchmark_strategy_map</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;  Evaluating benchmark strategies...&quot;</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="p">(</span><span class="n">strategy</span><span class="p">,</span> <span class="n">staggered</span><span class="p">)</span> <span class="ow">in</span> <span class="n">benchmark_strategy_map</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                    <span class="n">padded_circuit</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">apply_dd</span><span class="p">(</span>
+                        <span class="n">strategy</span><span class="p">,</span> <span class="n">training_circuit</span><span class="p">,</span> <span class="n">staggered</span><span class="o">=</span><span class="n">staggered</span>
+                    <span class="p">)</span>
+                    <span class="n">job</span> <span class="o">=</span> <span class="n">sampler</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">padded_circuit</span><span class="p">,</span> <span class="n">shots</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">shots</span><span class="p">)</span>
+                    <span class="n">result</span> <span class="o">=</span> <span class="n">job</span><span class="o">.</span><span class="n">result</span><span class="p">()</span>
+
+                    <span class="c1"># Extract result</span>
+                    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="s2">&quot;quasi_dists&quot;</span><span class="p">):</span>
+                        <span class="n">circuit_result</span> <span class="o">=</span> <span class="nb">type</span><span class="p">(</span>
+                            <span class="s2">&quot;Result&quot;</span><span class="p">,</span>
+                            <span class="p">(),</span>
+                            <span class="p">{</span>
+                                <span class="s2">&quot;quasi_dists&quot;</span><span class="p">:</span> <span class="p">[</span><span class="n">result</span><span class="o">.</span><span class="n">quasi_dists</span><span class="p">[</span><span class="mi">0</span><span class="p">]],</span>
+                                <span class="s2">&quot;metadata&quot;</span><span class="p">:</span> <span class="p">(</span>
+                                    <span class="n">result</span><span class="o">.</span><span class="n">metadata</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                                    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="s2">&quot;metadata&quot;</span><span class="p">)</span>
+                                    <span class="k">else</span> <span class="p">{}</span>
+                                <span class="p">),</span>
+                            <span class="p">},</span>
+                        <span class="p">)</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">circuit_result</span> <span class="o">=</span> <span class="n">result</span>
+
+                    <span class="n">score</span> <span class="o">=</span> <span class="n">utility_func</span><span class="p">(</span><span class="n">padded_circuit</span><span class="p">,</span> <span class="n">circuit_result</span><span class="p">)</span>
+                    <span class="n">iteration_benchmark_scores</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">score</span>
+
+                    <span class="c1"># Track history</span>
+                    <span class="k">if</span> <span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">benchmark_history</span><span class="p">:</span>
+                        <span class="n">benchmark_history</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+                    <span class="n">benchmark_history</span><span class="p">[</span><span class="n">name</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">score</span><span class="p">)</span>
+
+                    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;    </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">score</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
             <span class="c1"># Track best performance</span>
             <span class="n">best_score</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">scores</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
@@ -683,7 +739,12 @@
                         <span class="bp">self</span><span class="o">.</span><span class="n">_training_state</span><span class="o">.</span><span class="n">population</span>
                     <span class="p">),</span>
                 <span class="p">}</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_training_state</span><span class="o">.</span><span class="n">iteration_data</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">iteration_info</span><span class="p">)</span>
+
+                <span class="c1"># Only add benchmark scores if we&#39;re tracking them each iteration</span>
+                <span class="k">if</span> <span class="n">evaluate_benchmarks_each_iteration</span> <span class="ow">and</span> <span class="n">iteration_benchmark_scores</span><span class="p">:</span>
+                    <span class="n">iteration_info</span><span class="p">[</span><span class="s2">&quot;benchmark_scores&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">iteration_benchmark_scores</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">_training_state</span><span class="o">.</span><span class="n">iteration_data</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">iteration_info</span><span class="p">)</span>
 
             <span class="c1"># Dynamic mutation adjustment</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">dynamic_mutation</span> <span class="ow">and</span> <span class="n">iteration</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
@@ -727,22 +788,52 @@
         <span class="n">best_sequence</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">final_scores</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="n">final_scores</span><span class="o">.</span><span class="n">get</span><span class="p">)</span>
         <span class="n">best_score</span> <span class="o">=</span> <span class="n">final_scores</span><span class="p">[</span><span class="n">best_sequence</span><span class="p">]</span>
 
-        <span class="c1"># Run comparison sequences if requested</span>
-        <span class="n">comparison_data</span> <span class="o">=</span> <span class="p">{}</span>
-        <span class="k">if</span> <span class="n">comparison_seqs</span><span class="p">:</span>
-            <span class="n">comparison_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_evaluate_standard_sequences</span><span class="p">(</span>
-                <span class="n">comparison_seqs</span><span class="p">,</span> <span class="n">sampler</span><span class="p">,</span> <span class="n">training_circuit</span><span class="p">,</span> <span class="n">utility_func</span>
-            <span class="p">)</span>
-
         <span class="c1"># Calculate training time</span>
         <span class="n">training_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">start_time</span>
+
+        <span class="c1"># Evaluate benchmarks at the end if not done during training</span>
+        <span class="n">final_benchmark_scores</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">if</span> <span class="n">benchmark_strategy_map</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">evaluate_benchmarks_each_iteration</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Evaluating benchmark strategies...&quot;</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="p">(</span><span class="n">strategy</span><span class="p">,</span> <span class="n">staggered</span><span class="p">)</span> <span class="ow">in</span> <span class="n">benchmark_strategy_map</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                    <span class="n">padded_circuit</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">apply_strategy</span><span class="p">(</span>
+                        <span class="n">strategy</span><span class="p">,</span> <span class="n">training_circuit</span><span class="p">,</span> <span class="n">staggered</span><span class="o">=</span><span class="n">staggered</span>
+                    <span class="p">)</span>
+                    <span class="n">job</span> <span class="o">=</span> <span class="n">sampler</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">padded_circuit</span><span class="p">,</span> <span class="n">shots</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">shots</span><span class="p">)</span>
+                    <span class="n">result</span> <span class="o">=</span> <span class="n">job</span><span class="o">.</span><span class="n">result</span><span class="p">()</span>
+
+                    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="s2">&quot;quasi_dists&quot;</span><span class="p">):</span>
+                        <span class="n">circuit_result</span> <span class="o">=</span> <span class="nb">type</span><span class="p">(</span>
+                            <span class="s2">&quot;Result&quot;</span><span class="p">,</span>
+                            <span class="p">(),</span>
+                            <span class="p">{</span>
+                                <span class="s2">&quot;quasi_dists&quot;</span><span class="p">:</span> <span class="p">[</span><span class="n">result</span><span class="o">.</span><span class="n">quasi_dists</span><span class="p">[</span><span class="mi">0</span><span class="p">]],</span>
+                                <span class="s2">&quot;metadata&quot;</span><span class="p">:</span> <span class="p">(</span>
+                                    <span class="n">result</span><span class="o">.</span><span class="n">metadata</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                                    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="s2">&quot;metadata&quot;</span><span class="p">)</span>
+                                    <span class="k">else</span> <span class="p">{}</span>
+                                <span class="p">),</span>
+                            <span class="p">},</span>
+                        <span class="p">)</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">circuit_result</span> <span class="o">=</span> <span class="n">result</span>
+
+                    <span class="n">score</span> <span class="o">=</span> <span class="n">utility_func</span><span class="p">(</span><span class="n">padded_circuit</span><span class="p">,</span> <span class="n">circuit_result</span><span class="p">)</span>
+                    <span class="n">final_benchmark_scores</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">score</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">score</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># Get final scores from history</span>
+                <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">scores</span> <span class="ow">in</span> <span class="n">benchmark_history</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                    <span class="k">if</span> <span class="n">scores</span><span class="p">:</span>
+                        <span class="n">final_benchmark_scores</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">scores</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
 
         <span class="c1"># Create result</span>
         <span class="n">result</span> <span class="o">=</span> <span class="n">TrainingResult</span><span class="p">(</span>
             <span class="n">best_sequence</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_create_strategy_from_string</span><span class="p">(</span><span class="n">best_sequence</span><span class="p">),</span>
             <span class="n">best_score</span><span class="o">=</span><span class="n">best_score</span><span class="p">,</span>
             <span class="n">iteration_data</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_training_state</span><span class="o">.</span><span class="n">iteration_data</span><span class="p">,</span>
-            <span class="n">comparison_data</span><span class="o">=</span><span class="n">comparison_data</span><span class="p">,</span>
+            <span class="n">benchmark_scores</span><span class="o">=</span><span class="n">final_benchmark_scores</span><span class="p">,</span>
             <span class="n">final_population</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_training_state</span><span class="o">.</span><span class="n">population</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span>
             <span class="n">config</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">,</span>
             <span class="n">training_time</span><span class="o">=</span><span class="n">training_time</span><span class="p">,</span>
@@ -878,7 +969,7 @@
             <span class="n">dd_strategy</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_create_strategy_from_string</span><span class="p">(</span><span class="n">strategy_str</span><span class="p">)</span>
 
             <span class="c1"># Apply DD to circuit</span>
-            <span class="n">padded_circuit</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">apply_dd</span><span class="p">(</span><span class="n">dd_strategy</span><span class="p">,</span> <span class="n">circuit</span><span class="p">)</span>
+            <span class="n">padded_circuit</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">apply_strategy</span><span class="p">(</span><span class="n">dd_strategy</span><span class="p">,</span> <span class="n">circuit</span><span class="p">)</span>
             <span class="n">circuits_to_run</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">padded_circuit</span><span class="p">)</span>
             <span class="n">strategy_map</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">strategy_str</span>
 
@@ -1046,7 +1137,9 @@
                 <span class="c1"># Check if this should be staggered</span>
                 <span class="n">staggered</span> <span class="o">=</span> <span class="n">std_sequences</span><span class="o">.</span><span class="n">is_staggered</span><span class="p">(</span><span class="n">seq_name</span><span class="o">.</span><span class="n">lower</span><span class="p">())</span>
 
-                <span class="n">padded_circuit</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">apply_dd</span><span class="p">(</span><span class="n">strategy</span><span class="p">,</span> <span class="n">circuit</span><span class="p">,</span> <span class="n">staggered</span><span class="o">=</span><span class="n">staggered</span><span class="p">)</span>
+                <span class="n">padded_circuit</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">apply_strategy</span><span class="p">(</span>
+                    <span class="n">strategy</span><span class="p">,</span> <span class="n">circuit</span><span class="p">,</span> <span class="n">staggered</span><span class="o">=</span><span class="n">staggered</span>
+                <span class="p">)</span>
 
                 <span class="n">job</span> <span class="o">=</span> <span class="n">sampler</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">padded_circuit</span><span class="p">,</span> <span class="n">shots</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">shots</span><span class="p">)</span>
                 <span class="n">result</span> <span class="o">=</span> <span class="n">job</span><span class="o">.</span><span class="n">result</span><span class="p">()</span>
@@ -1092,15 +1185,35 @@
         <span class="bp">self</span><span class="p">,</span> <span class="n">results</span><span class="p">:</span> <span class="n">TrainingResult</span><span class="p">,</span> <span class="n">save_path</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Plot training progression and comparison data.&quot;&quot;&quot;</span>
-        <span class="n">fig</span><span class="p">,</span> <span class="p">(</span><span class="n">ax1</span><span class="p">,</span> <span class="n">ax2</span><span class="p">)</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">12</span><span class="p">,</span> <span class="mi">5</span><span class="p">))</span>
+        <span class="c1"># Determine number of subplots needed</span>
+        <span class="n">n_plots</span> <span class="o">=</span> <span class="mi">2</span> <span class="k">if</span> <span class="n">results</span><span class="o">.</span><span class="n">comparison_data</span> <span class="k">else</span> <span class="mi">1</span>
+        <span class="k">if</span> <span class="n">results</span><span class="o">.</span><span class="n">benchmark_history</span><span class="p">:</span>
+            <span class="n">n_plots</span> <span class="o">=</span> <span class="mi">3</span>
+
+        <span class="n">fig</span><span class="p">,</span> <span class="n">axes</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">n_plots</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">6</span> <span class="o">*</span> <span class="n">n_plots</span><span class="p">,</span> <span class="mi">5</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">n_plots</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">axes</span> <span class="o">=</span> <span class="p">[</span><span class="n">axes</span><span class="p">]</span>
 
         <span class="c1"># Plot training progression</span>
+        <span class="n">ax1</span> <span class="o">=</span> <span class="n">axes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
         <span class="n">iterations</span> <span class="o">=</span> <span class="p">[</span><span class="n">d</span><span class="p">[</span><span class="s2">&quot;iteration&quot;</span><span class="p">]</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">results</span><span class="o">.</span><span class="n">iteration_data</span><span class="p">]</span>
         <span class="n">best_scores</span> <span class="o">=</span> <span class="p">[</span><span class="n">d</span><span class="p">[</span><span class="s2">&quot;best_score&quot;</span><span class="p">]</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">results</span><span class="o">.</span><span class="n">iteration_data</span><span class="p">]</span>
         <span class="n">mean_scores</span> <span class="o">=</span> <span class="p">[</span><span class="n">d</span><span class="p">[</span><span class="s2">&quot;mean_score&quot;</span><span class="p">]</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">results</span><span class="o">.</span><span class="n">iteration_data</span><span class="p">]</span>
 
-        <span class="n">ax1</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">iterations</span><span class="p">,</span> <span class="n">best_scores</span><span class="p">,</span> <span class="s2">&quot;-o&quot;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Best Score&quot;</span><span class="p">)</span>
+        <span class="n">ax1</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">iterations</span><span class="p">,</span> <span class="n">best_scores</span><span class="p">,</span> <span class="s2">&quot;-o&quot;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Best Score&quot;</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
         <span class="n">ax1</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">iterations</span><span class="p">,</span> <span class="n">mean_scores</span><span class="p">,</span> <span class="s2">&quot;-s&quot;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Mean Score&quot;</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.7</span><span class="p">)</span>
+
+        <span class="c1"># Add benchmark lines if available</span>
+        <span class="k">if</span> <span class="n">results</span><span class="o">.</span><span class="n">benchmark_history</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">scores</span> <span class="ow">in</span> <span class="n">results</span><span class="o">.</span><span class="n">benchmark_history</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="n">ax1</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
+                    <span class="n">iterations</span><span class="p">[:</span> <span class="nb">len</span><span class="p">(</span><span class="n">scores</span><span class="p">)],</span>
+                    <span class="n">scores</span><span class="p">,</span>
+                    <span class="s2">&quot;--&quot;</span><span class="p">,</span>
+                    <span class="n">label</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2"> (benchmark)&quot;</span><span class="p">,</span>
+                    <span class="n">alpha</span><span class="o">=</span><span class="mf">0.6</span><span class="p">,</span>
+                <span class="p">)</span>
+
         <span class="n">ax1</span><span class="o">.</span><span class="n">fill_between</span><span class="p">(</span>
             <span class="n">iterations</span><span class="p">,</span>
             <span class="p">[</span><span class="n">d</span><span class="p">[</span><span class="s2">&quot;mean_score&quot;</span><span class="p">]</span> <span class="o">-</span> <span class="n">d</span><span class="p">[</span><span class="s2">&quot;std_score&quot;</span><span class="p">]</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">results</span><span class="o">.</span><span class="n">iteration_data</span><span class="p">],</span>
@@ -1115,7 +1228,8 @@
         <span class="n">ax1</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="kc">True</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.3</span><span class="p">)</span>
 
         <span class="c1"># Plot comparison data</span>
-        <span class="k">if</span> <span class="n">results</span><span class="o">.</span><span class="n">comparison_data</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">results</span><span class="o">.</span><span class="n">comparison_data</span> <span class="ow">and</span> <span class="n">n_plots</span> <span class="o">&gt;=</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="n">ax2</span> <span class="o">=</span> <span class="n">axes</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
             <span class="n">names</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">results</span><span class="o">.</span><span class="n">comparison_data</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
             <span class="n">values</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">results</span><span class="o">.</span><span class="n">comparison_data</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
 
@@ -1145,6 +1259,18 @@
                     <span class="n">va</span><span class="o">=</span><span class="s2">&quot;bottom&quot;</span><span class="p">,</span>
                 <span class="p">)</span>
 
+        <span class="c1"># Plot benchmark history separately if we have 3 plots</span>
+        <span class="k">if</span> <span class="n">results</span><span class="o">.</span><span class="n">benchmark_history</span> <span class="ow">and</span> <span class="n">n_plots</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+            <span class="n">ax3</span> <span class="o">=</span> <span class="n">axes</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+            <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">scores</span> <span class="ow">in</span> <span class="n">results</span><span class="o">.</span><span class="n">benchmark_history</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="n">ax3</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">iterations</span><span class="p">[:</span> <span class="nb">len</span><span class="p">(</span><span class="n">scores</span><span class="p">)],</span> <span class="n">scores</span><span class="p">,</span> <span class="s2">&quot;-o&quot;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="n">name</span><span class="p">)</span>
+
+            <span class="n">ax3</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;Iteration&quot;</span><span class="p">)</span>
+            <span class="n">ax3</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;Utility Score&quot;</span><span class="p">)</span>
+            <span class="n">ax3</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">&quot;Benchmark Performance&quot;</span><span class="p">)</span>
+            <span class="n">ax3</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+            <span class="n">ax3</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="kc">True</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.3</span><span class="p">)</span>
+
         <span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
 
         <span class="k">if</span> <span class="n">save_path</span><span class="p">:</span>
@@ -1154,9 +1280,9 @@
             <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span></div>
 
 
-<div class="viewcode-block" id="GADD.run">
-<a class="viewcode-back" href="../../api/gadd.html#gadd.gadd.GADD.run">[docs]</a>
-    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span>
+<div class="viewcode-block" id="GADD.evaluate">
+<a class="viewcode-back" href="../../api/gadd.html#gadd.gadd.GADD.evaluate">[docs]</a>
+    <span class="k">def</span> <span class="nf">evaluate</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">strategy</span><span class="p">:</span> <span class="n">DDStrategy</span><span class="p">,</span>
         <span class="n">target_circuit</span><span class="p">:</span> <span class="n">QuantumCircuit</span><span class="p">,</span>
@@ -1164,7 +1290,7 @@
         <span class="n">utility_function</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Callable</span><span class="p">[[</span><span class="n">QuantumCircuit</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="nb">float</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">staggered</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Run a specific DD strategy on a target circuit.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Run a specific DD strategy on a target circuit and evaluate its utility.</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            strategy: DD strategy to apply.</span>
@@ -1177,7 +1303,9 @@
 <span class="sd">            Dictionary with execution results.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1"># Apply DD strategy to circuit</span>
-        <span class="n">padded_circuit</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">apply_dd</span><span class="p">(</span><span class="n">strategy</span><span class="p">,</span> <span class="n">target_circuit</span><span class="p">,</span> <span class="n">staggered</span><span class="o">=</span><span class="n">staggered</span><span class="p">)</span>
+        <span class="n">padded_circuit</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">apply_strategy</span><span class="p">(</span>
+            <span class="n">strategy</span><span class="p">,</span> <span class="n">target_circuit</span><span class="p">,</span> <span class="n">staggered</span><span class="o">=</span><span class="n">staggered</span>
+        <span class="p">)</span>
 
         <span class="c1"># Execute circuit</span>
         <span class="n">job</span> <span class="o">=</span> <span class="n">sampler</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">padded_circuit</span><span class="p">,</span> <span class="n">shots</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">shots</span><span class="p">)</span>

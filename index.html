@@ -197,7 +197,7 @@
   <p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="api/gadd.html">GADD Core Module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="api/sequences.html">DD Sequences</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api/strategies.html">DD Strategies</a></li>
 <li class="toctree-l1"><a class="reference internal" href="api/utility_functions.html">Utility Functions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="api/group_operations.html">Group Operations</a></li>
 <li class="toctree-l1"><a class="reference internal" href="api/circuit_padding.html">Circuit Padding</a></li>
@@ -333,14 +333,6 @@ the training progression and running the circuit on the target circuit are also 
 
 <span class="c1"># Plot results</span>
 <span class="n">gadd</span><span class="o">.</span><span class="n">plot_training_progress</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">save_path</span><span class="o">=</span><span class="s2">&quot;training_plot.png&quot;</span><span class="p">)</span>
-
-<span class="c1"># Visualize the target circuit with DD sequences</span>
-<span class="n">circuit_with_dd</span> <span class="o">=</span> <span class="n">gadd</span><span class="o">.</span><span class="n">apply_dd</span><span class="p">(</span>
-    <span class="n">strategy</span> <span class="o">=</span> <span class="n">best_strategy</span><span class="p">,</span>
-    <span class="n">target_circuit</span> <span class="o">=</span> <span class="n">target_circuit</span><span class="p">,</span>
-    <span class="n">backend</span> <span class="o">=</span> <span class="n">backend</span>
-<span class="p">)</span>
-<span class="n">timeline_drawer</span><span class="p">(</span><span class="n">circuit_with_dd</span><span class="p">)</span>
 
 <span class="c1"># Run the best sequence on the target circuit</span>
 <span class="n">result</span> <span class="o">=</span> <span class="n">gadd</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>

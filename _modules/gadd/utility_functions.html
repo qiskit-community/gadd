@@ -196,7 +196,7 @@
   <p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../api/gadd.html">GADD Core Module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../api/sequences.html">DD Sequences</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../api/strategies.html">DD Strategies</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../api/utility_functions.html">Utility Functions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../api/group_operations.html">Group Operations</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../api/circuit_padding.html">Circuit Padding</a></li>
@@ -242,7 +242,6 @@
 
 <span class="kn">from</span> <span class="nn">abc</span> <span class="kn">import</span> <span class="n">ABC</span><span class="p">,</span> <span class="n">abstractmethod</span>
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Union</span><span class="p">,</span> <span class="n">Optional</span>
-<span class="kn">from</span> <span class="nn">qiskit</span> <span class="kn">import</span> <span class="n">QuantumCircuit</span>
 <span class="kn">from</span> <span class="nn">qiskit.result</span> <span class="kn">import</span> <span class="n">QuasiDistribution</span><span class="p">,</span> <span class="n">Counts</span>
 
 <span class="c1"># Type alias for various count dictionary formats</span>
@@ -252,20 +251,20 @@
 <div class="viewcode-block" id="normalize_counts">
 <a class="viewcode-back" href="../../api/utility_functions.html#gadd.utility_functions.normalize_counts">[docs]</a>
 <span class="k">def</span> <span class="nf">normalize_counts</span><span class="p">(</span><span class="n">counts</span><span class="p">:</span> <span class="n">CountsType</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Normalize measurement counts into a standardized format.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Normalize measurement counts into a standardized format.</span>
+
+<span class="sd">    Converts various count dictionary formats into a consistent representation</span>
+<span class="sd">    with bitstring keys and normalized probability values. Handles both integer</span>
+<span class="sd">    and string keys, ensuring proper normalization and format standardization.</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        counts: Measurement counts in various formats:</span>
-<span class="sd">            - QuasiDistribution</span>
-<span class="sd">            - qiskit.result.Counts</span>
-<span class="sd">            - Dictionary mapping bitstrings or integers to counts/probabilities</span>
+<span class="sd">        counts: Measurement counts in QuasiDistribution, Counts, or dict format.</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        Dictionary mapping bitstrings to normalized probabilities.</span>
 
 <span class="sd">    Raises:</span>
-<span class="sd">        ValueError: If counts format is invalid or empty.</span>
+<span class="sd">        ValueError: If counts format is invalid, empty, or total is non-positive.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">counts</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Empty counts provided&quot;</span><span class="p">)</span>
@@ -310,7 +309,21 @@
 <div class="viewcode-block" id="UtilityFunction">
 <a class="viewcode-back" href="../../api/utility_functions.html#gadd.utility_functions.UtilityFunction">[docs]</a>
 <span class="k">class</span> <span class="nc">UtilityFunction</span><span class="p">(</span><span class="n">ABC</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Abstract base class for DD utility functions.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Abstract base class for DD utility functions used in GADD optimization.</span>
+
+<span class="sd">    Utility functions quantify the performance of dynamical decoupling sequences</span>
+<span class="sd">    by analyzing the measurement outcomes from quantum circuits. They serve as</span>
+<span class="sd">    the fitness function for the genetic algorithm, guiding the search toward</span>
+<span class="sd">    sequences that maximize computational fidelity or other performance metrics.</span>
+
+<span class="sd">    The utility function takes measurement counts in various formats and returns</span>
+<span class="sd">    a scalar score between 0 and 1, where higher values indicate better</span>
+<span class="sd">    performance. The specific computation depends on the target application</span>
+<span class="sd">    and desired error suppression goals.</span>
+
+<span class="sd">    Subclasses must implement the abstract methods to define how measurement</span>
+<span class="sd">    outcomes are processed and scored for their specific use case.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
 
 <div class="viewcode-block" id="UtilityFunction.compute">
 <a class="viewcode-back" href="../../api/utility_functions.html#gadd.utility_functions.UtilityFunction.compute">[docs]</a>
@@ -362,15 +375,32 @@
 <div class="viewcode-block" id="SuccessProbability">
 <a class="viewcode-back" href="../../api/utility_functions.html#gadd.utility_functions.SuccessProbability">[docs]</a>
 <span class="k">class</span> <span class="nc">SuccessProbability</span><span class="p">(</span><span class="n">UtilityFunction</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Utility function based on success probability of measuring a target state.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Utility function measuring success probability for a target quantum state.</span>
+
+<span class="sd">    This utility function evaluates DD sequence performance by calculating the</span>
+<span class="sd">    probability of measuring a specific target state. It is particularly useful</span>
+<span class="sd">    for oracular algorithms like Bernstein-Vazirani where the ideal outcome is</span>
+<span class="sd">    a single known bitstring, and higher success probability indicates better</span>
+<span class="sd">    error suppression.</span>
+
+<span class="sd">    The function normalizes measurement counts and returns the probability of</span>
+<span class="sd">    observing the target state. This provides a direct measure of computational</span>
+<span class="sd">    success that can guide the genetic algorithm toward sequences that preserve</span>
+<span class="sd">    the desired quantum computation.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        target_state: Expected quantum state as binary string or integer.</span>
+<span class="sd">            For integer inputs, the value is converted to binary representation.</span>
+
+<span class="sd">    Example:</span>
+<span class="sd">        &gt;&gt;&gt; utility = SuccessProbability(&quot;101&quot;)</span>
+<span class="sd">        &gt;&gt;&gt; score = utility.compute(measurement_counts)</span>
+<span class="sd">        &gt;&gt;&gt; # Returns probability of measuring |101⟩ state</span>
+<span class="sd">    &quot;&quot;&quot;</span>
 
 <div class="viewcode-block" id="SuccessProbability.__init__">
 <a class="viewcode-back" href="../../api/utility_functions.html#gadd.utility_functions.SuccessProbability.__init__">[docs]</a>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">target_state</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Args:</span>
-<span class="sd">            target_state: Expected quantum state (binary string or integer)</span>
-<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">target_state</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
             <span class="c1"># Convert to binary string - width will be determined from counts</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_target</span> <span class="o">=</span> <span class="nb">bin</span><span class="p">(</span><span class="n">target_state</span><span class="p">)[</span><span class="mi">2</span><span class="p">:]</span>  <span class="c1"># Remove &#39;0b&#39; prefix</span>
@@ -421,16 +451,36 @@
 <div class="viewcode-block" id="OneNormDistance">
 <a class="viewcode-back" href="../../api/utility_functions.html#gadd.utility_functions.OneNormDistance">[docs]</a>
 <span class="k">class</span> <span class="nc">OneNormDistance</span><span class="p">(</span><span class="n">UtilityFunction</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Utility function based on 1-norm distance to ideal distribution.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Utility function based on 1-norm distance to an ideal probability distribution.</span>
+
+<span class="sd">    This utility function measures DD sequence performance by comparing the observed</span>
+<span class="sd">    measurement distribution to an ideal target distribution. It computes the</span>
+<span class="sd">    1-norm (total variation) distance and returns 1 minus half the distance,</span>
+<span class="sd">    normalized to [0,1] where 1 indicates perfect agreement.</span>
+
+<span class="sd">    This metric is particularly useful for quantum state preparation tasks where</span>
+<span class="sd">    the ideal outcome is a known probability distribution over measurement outcomes,</span>
+<span class="sd">    such as GHZ states or other entangled states with well-defined measurement</span>
+<span class="sd">    statistics.</span>
+
+<span class="sd">    The 1-norm distance is calculated as: Σ|p_ideal(k) - p_observed(k)| over all</span>
+<span class="sd">    possible measurement outcomes k, providing a comprehensive measure of</span>
+<span class="sd">    distributional fidelity.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        ideal_distribution: Target probability distribution mapping states to</span>
+<span class="sd">            their ideal probabilities. States can be specified as binary strings</span>
+<span class="sd">            or integers.</span>
+
+<span class="sd">    Example:</span>
+<span class="sd">        &gt;&gt;&gt; ideal = {&quot;000&quot;: 0.5, &quot;111&quot;: 0.5}  # GHZ state</span>
+<span class="sd">        &gt;&gt;&gt; utility = OneNormDistance(ideal)</span>
+<span class="sd">        &gt;&gt;&gt; score = utility.compute(measurement_counts)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
 
 <div class="viewcode-block" id="OneNormDistance.__init__">
 <a class="viewcode-back" href="../../api/utility_functions.html#gadd.utility_functions.OneNormDistance.__init__">[docs]</a>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ideal_distribution</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span> <span class="nb">float</span><span class="p">]):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Args:</span>
-<span class="sd">            ideal_distribution: Mapping of states to their ideal probabilities</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="c1"># Normalize and convert the ideal distribution</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">ideal_distribution</span> <span class="o">=</span> <span class="n">normalize_counts</span><span class="p">(</span><span class="n">ideal_distribution</span><span class="p">)</span></div>
 
 
@@ -489,15 +539,33 @@
 <div class="viewcode-block" id="GHZUtility">
 <a class="viewcode-back" href="../../api/utility_functions.html#gadd.utility_functions.GHZUtility">[docs]</a>
 <span class="k">class</span> <span class="nc">GHZUtility</span><span class="p">(</span><span class="n">OneNormDistance</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Specialized utility function for GHZ states.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Specialized utility function for Greenberger-Horne-Zeilinger state preparation.</span>
+
+<span class="sd">    This utility function is optimized for evaluating DD sequence performance on</span>
+<span class="sd">    GHZ state preparation circuits. GHZ states are maximally entangled states of</span>
+<span class="sd">    the form (|00...0⟩ + |11...1⟩)/√2, which should ideally produce equal</span>
+<span class="sd">    probability of measuring all-zero or all-one bitstrings.</span>
+
+<span class="sd">    The function automatically constructs the ideal GHZ distribution for the</span>
+<span class="sd">    specified number of qubits and uses the 1-norm distance metric to evaluate</span>
+<span class="sd">    how well the observed measurements match this target distribution. This</span>
+<span class="sd">    provides a specialized utility function for one of the key benchmarking</span>
+<span class="sd">    tasks described in the GADD paper.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        n_qubits: Number of qubits in the GHZ state preparation circuit.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">        ValueError: If n_qubits is not positive.</span>
+
+<span class="sd">    Example:</span>
+<span class="sd">        &gt;&gt;&gt; utility = GHZUtility(3)  # For 3-qubit GHZ state</span>
+<span class="sd">        &gt;&gt;&gt; # Expects 50% probability each for |000⟩ and |111⟩</span>
+<span class="sd">    &quot;&quot;&quot;</span>
 
 <div class="viewcode-block" id="GHZUtility.__init__">
 <a class="viewcode-back" href="../../api/utility_functions.html#gadd.utility_functions.GHZUtility.__init__">[docs]</a>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n_qubits</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Args:</span>
-<span class="sd">            n_qubits: Number of qubits in GHZ state</span>
-<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">n_qubits</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Number of qubits must be positive&quot;</span><span class="p">)</span>
 
@@ -525,7 +593,27 @@
 <div class="viewcode-block" id="CustomUtility">
 <a class="viewcode-back" href="../../api/utility_functions.html#gadd.utility_functions.CustomUtility">[docs]</a>
 <span class="k">class</span> <span class="nc">CustomUtility</span><span class="p">(</span><span class="n">UtilityFunction</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Wrapper for custom utility functions provided by users.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Wrapper for user-defined custom utility functions.</span>
+
+<span class="sd">    This class allows users to provide their own utility functions for specialized</span>
+<span class="sd">    applications beyond the standard use cases. The custom function receives</span>
+<span class="sd">    normalized measurement counts as a dictionary mapping bitstrings to probabilities</span>
+<span class="sd">    and should return a scalar utility value.</span>
+
+<span class="sd">    This flexibility enables GADD optimization for novel quantum algorithms or</span>
+<span class="sd">    specialized error suppression goals not covered by the built-in utility</span>
+<span class="sd">    functions. The custom function should be deterministic and return values</span>
+<span class="sd">    in a consistent range to ensure proper genetic algorithm convergence.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        function: Custom function taking normalized counts dict and returning float.</span>
+<span class="sd">        name: Optional descriptive name for the utility function.</span>
+
+<span class="sd">    Example:</span>
+<span class="sd">        &gt;&gt;&gt; def my_utility(counts):</span>
+<span class="sd">        ...     return counts.get(&quot;000&quot;, 0) + 0.5 * counts.get(&quot;001&quot;, 0)</span>
+<span class="sd">        &gt;&gt;&gt; utility = CustomUtility(my_utility, &quot;Custom Weighting&quot;)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
 
 <div class="viewcode-block" id="CustomUtility.__init__">
 <a class="viewcode-back" href="../../api/utility_functions.html#gadd.utility_functions.CustomUtility.__init__">[docs]</a>
@@ -534,11 +622,6 @@
         <span class="n">function</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]],</span> <span class="nb">float</span><span class="p">],</span>
         <span class="n">name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;Custom Utility&quot;</span><span class="p">,</span>
     <span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Args:</span>
-<span class="sd">            function: Custom function that takes normalized counts and returns utility value</span>
-<span class="sd">            name: Optional name for the utility function</span>
-<span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">function</span> <span class="o">=</span> <span class="n">function</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_name</span> <span class="o">=</span> <span class="n">name</span></div>
 
@@ -569,7 +652,25 @@
 <div class="viewcode-block" id="UtilityFactory">
 <a class="viewcode-back" href="../../api/utility_functions.html#gadd.utility_functions.UtilityFactory">[docs]</a>
 <span class="k">class</span> <span class="nc">UtilityFactory</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Factory class for creating common utility functions.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Factory class providing convenient creation methods for common utility functions.</span>
+
+<span class="sd">    This factory simplifies the instantiation of utility functions for common</span>
+<span class="sd">    use cases in dynamical decoupling optimization. It provides static methods</span>
+<span class="sd">    that encapsulate the parameter setup for standard utility functions, reducing</span>
+<span class="sd">    boilerplate code and potential configuration errors.</span>
+
+<span class="sd">    The factory methods correspond to the main experimental scenarios described</span>
+<span class="sd">    in the GADD paper: success probability for oracular algorithms, 1-norm</span>
+<span class="sd">    distance for state preparation tasks, GHZ state fidelity for entanglement</span>
+<span class="sd">    benchmarks, and custom functions for specialized applications.</span>
+
+<span class="sd">    Example:</span>
+<span class="sd">        &gt;&gt;&gt; # Create utility for Bernstein-Vazirani with target &quot;101&quot;</span>
+<span class="sd">        &gt;&gt;&gt; utility = UtilityFactory.success_probability(&quot;101&quot;)</span>
+<span class="sd">        &gt;&gt;&gt;</span>
+<span class="sd">        &gt;&gt;&gt; # Create utility for 4-qubit GHZ state</span>
+<span class="sd">        &gt;&gt;&gt; ghz_utility = UtilityFactory.ghz_state(4)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
 
 <div class="viewcode-block" id="UtilityFactory.success_probability">
 <a class="viewcode-back" href="../../api/utility_functions.html#gadd.utility_functions.UtilityFactory.success_probability">[docs]</a>

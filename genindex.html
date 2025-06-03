@@ -195,7 +195,7 @@
   <p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="api/gadd.html">GADD Core Module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="api/sequences.html">DD Sequences</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api/strategies.html">DD Strategies</a></li>
 <li class="toctree-l1"><a class="reference internal" href="api/utility_functions.html">Utility Functions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="api/group_operations.html">Group Operations</a></li>
 <li class="toctree-l1"><a class="reference internal" href="api/circuit_padding.html">Circuit Padding</a></li>
@@ -234,7 +234,7 @@
           
 <section class="genindex-section">
   <h1 id="index">Index</h1>
-  <div class="genindex-jumpbox"><a href="#_"><strong>_</strong></a> | <a href="#A"><strong>A</strong></a> | <a href="#B"><strong>B</strong></a> | <a href="#C"><strong>C</strong></a> | <a href="#D"><strong>D</strong></a> | <a href="#E"><strong>E</strong></a> | <a href="#F"><strong>F</strong></a> | <a href="#G"><strong>G</strong></a> | <a href="#I"><strong>I</strong></a> | <a href="#L"><strong>L</strong></a> | <a href="#M"><strong>M</strong></a> | <a href="#N"><strong>N</strong></a> | <a href="#O"><strong>O</strong></a> | <a href="#P"><strong>P</strong></a> | <a href="#R"><strong>R</strong></a> | <a href="#S"><strong>S</strong></a> | <a href="#T"><strong>T</strong></a> | <a href="#U"><strong>U</strong></a> | <a href="#V"><strong>V</strong></a></div>
+  <div class="genindex-jumpbox"><a href="#_"><strong>_</strong></a> | <a href="#A"><strong>A</strong></a> | <a href="#B"><strong>B</strong></a> | <a href="#C"><strong>C</strong></a> | <a href="#D"><strong>D</strong></a> | <a href="#E"><strong>E</strong></a> | <a href="#F"><strong>F</strong></a> | <a href="#G"><strong>G</strong></a> | <a href="#I"><strong>I</strong></a> | <a href="#L"><strong>L</strong></a> | <a href="#M"><strong>M</strong></a> | <a href="#N"><strong>N</strong></a> | <a href="#O"><strong>O</strong></a> | <a href="#P"><strong>P</strong></a> | <a href="#S"><strong>S</strong></a> | <a href="#T"><strong>T</strong></a> | <a href="#U"><strong>U</strong></a> | <a href="#V"><strong>V</strong></a></div>
 </section>
 <section id="_" class="genindex-section">
   <h2>_</h2>
@@ -251,7 +251,13 @@
 </li>
           <li><a href="api/gadd.html#gadd.gadd.TrainingState.__init__">(gadd.gadd.TrainingState method)</a>
 </li>
-          <li><a href="api/group_operations.html#gadd.group_operations.DecouplingGroup.__init__">(gadd.group_operations.DecouplingGroup method)</a>
+          <li><a href="api/strategies.html#gadd.strategies.ColorAssignment.__init__">(gadd.strategies.ColorAssignment method)</a>
+</li>
+          <li><a href="api/strategies.html#gadd.strategies.DDSequence.__init__">(gadd.strategies.DDSequence method)</a>
+</li>
+          <li><a href="api/strategies.html#gadd.strategies.DDStrategy.__init__">(gadd.strategies.DDStrategy method)</a>
+</li>
+          <li><a href="api/strategies.html#gadd.strategies.StandardSequences.__init__">(gadd.strategies.StandardSequences method)</a>
 </li>
           <li><a href="api/utility_functions.html#gadd.utility_functions.CustomUtility.__init__">(gadd.utility_functions.CustomUtility method)</a>
 </li>
@@ -264,10 +270,18 @@
         </ul></li>
     </ul></td>
     <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="api/gadd.html#gadd.gadd.TrainingResult.__post_init__">__post_init__() (gadd.gadd.TrainingResult method)</a>
+
+        <ul>
+          <li><a href="api/strategies.html#gadd.strategies.DDSequence.__post_init__">(gadd.strategies.DDSequence method)</a>
+</li>
+        </ul></li>
         <li><a href="api/gadd.html#gadd.gadd.TrainingConfig.__str__">__str__() (gadd.gadd.TrainingConfig method)</a>
 
         <ul>
           <li><a href="api/gadd.html#gadd.gadd.TrainingResult.__str__">(gadd.gadd.TrainingResult method)</a>
+</li>
+          <li><a href="api/strategies.html#gadd.strategies.ColorAssignment.__str__">(gadd.strategies.ColorAssignment method)</a>
 </li>
           <li><a href="api/utility_functions.html#gadd.utility_functions.CustomUtility.__str__">(gadd.utility_functions.CustomUtility method)</a>
 </li>
@@ -286,11 +300,11 @@
   <h2>A</h2>
   <table style="width: 100%" class="indextable genindextable"><tr>
     <td style="width: 33%; vertical-align: top;"><ul>
-        <li><a href="api/gadd.html#gadd.gadd.GADD.apply_dd">apply_dd() (gadd.gadd.GADD method)</a>
+        <li><a href="api/circuit_padding.html#gadd.circuit_padding.apply_dd_strategy">apply_dd_strategy() (in module gadd.circuit_padding)</a>
 </li>
     </ul></td>
     <td style="width: 33%; vertical-align: top;"><ul>
-        <li><a href="api/circuit_padding.html#gadd.circuit_padding.apply_dd_strategy">apply_dd_strategy() (in module gadd.circuit_padding)</a>
+        <li><a href="api/gadd.html#gadd.gadd.GADD.apply_strategy">apply_strategy() (gadd.gadd.GADD method)</a>
 </li>
     </ul></td>
   </tr></table>
@@ -302,10 +316,14 @@
     <td style="width: 33%; vertical-align: top;"><ul>
         <li><a href="api/gadd.html#gadd.gadd.GADD.backend">backend (gadd.gadd.GADD property)</a>
 </li>
-        <li><a href="api/gadd.html#gadd.gadd.TrainingResult.best_score">best_score (gadd.gadd.TrainingResult attribute)</a>
+        <li><a href="api/gadd.html#gadd.gadd.TrainingResult.benchmark_history">benchmark_history (gadd.gadd.TrainingResult attribute)</a>
+</li>
+        <li><a href="api/gadd.html#gadd.gadd.TrainingResult.benchmark_scores">benchmark_scores (gadd.gadd.TrainingResult attribute)</a>
 </li>
     </ul></td>
     <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="api/gadd.html#gadd.gadd.TrainingResult.best_score">best_score (gadd.gadd.TrainingResult attribute)</a>
+</li>
         <li><a href="api/gadd.html#gadd.gadd.TrainingState.best_scores">best_scores (gadd.gadd.TrainingState attribute)</a>
 </li>
         <li><a href="api/gadd.html#gadd.gadd.TrainingResult.best_sequence">best_sequence (gadd.gadd.TrainingResult attribute)</a>
@@ -320,11 +338,9 @@
   <h2>C</h2>
   <table style="width: 100%" class="indextable genindextable"><tr>
     <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="api/strategies.html#gadd.strategies.ColorAssignment">ColorAssignment (class in gadd.strategies)</a>
+</li>
         <li><a href="api/gadd.html#gadd.gadd.GADD.coloring">coloring (gadd.gadd.GADD property)</a>
-</li>
-        <li><a href="api/gadd.html#gadd.gadd.TrainingResult.comparison_data">comparison_data (gadd.gadd.TrainingResult attribute)</a>
-</li>
-        <li><a href="api/group_operations.html#gadd.group_operations.complete_sequence_to_identity">complete_sequence_to_identity() (in module gadd.group_operations)</a>
 </li>
         <li><a href="api/utility_functions.html#gadd.utility_functions.CustomUtility.compute">compute() (gadd.utility_functions.CustomUtility method)</a>
 
@@ -340,6 +356,12 @@
     <td style="width: 33%; vertical-align: top;"><ul>
         <li><a href="api/gadd.html#gadd.gadd.TrainingResult.config">config (gadd.gadd.TrainingResult attribute)</a>
 </li>
+        <li><a href="api/strategies.html#gadd.strategies.DDSequence.copy">copy() (gadd.strategies.DDSequence method)</a>
+</li>
+        <li><a href="api/strategies.html#gadd.strategies.create_xb_gate">create_xb_gate() (in module gadd.strategies)</a>
+</li>
+        <li><a href="api/strategies.html#gadd.strategies.create_yb_gate">create_yb_gate() (in module gadd.strategies)</a>
+</li>
         <li><a href="api/utility_functions.html#gadd.utility_functions.UtilityFactory.custom">custom() (gadd.utility_functions.UtilityFactory static method)</a>
 </li>
         <li><a href="api/utility_functions.html#gadd.utility_functions.CustomUtility">CustomUtility (class in gadd.utility_functions)</a>
@@ -354,11 +376,13 @@
     <td style="width: 33%; vertical-align: top;"><ul>
         <li><a href="api/circuit_padding.html#gadd.circuit_padding.DDPulse">DDPulse (class in gadd.circuit_padding)</a>
 </li>
-        <li><a href="api/gadd.html#gadd.gadd.TrainingConfig.decoupling_group">decoupling_group (gadd.gadd.TrainingConfig attribute)</a>
+        <li><a href="api/strategies.html#gadd.strategies.DDSequence">DDSequence (class in gadd.strategies)</a>
 </li>
     </ul></td>
     <td style="width: 33%; vertical-align: top;"><ul>
-        <li><a href="api/group_operations.html#gadd.group_operations.DecouplingGroup">DecouplingGroup (class in gadd.group_operations)</a>
+        <li><a href="api/strategies.html#gadd.strategies.DDStrategy">DDStrategy (class in gadd.strategies)</a>
+</li>
+        <li><a href="api/gadd.html#gadd.gadd.TrainingConfig.decoupling_group">decoupling_group (gadd.gadd.TrainingConfig attribute)</a>
 </li>
         <li><a href="api/gadd.html#gadd.gadd.TrainingConfig.dynamic_mutation">dynamic_mutation (gadd.gadd.TrainingConfig attribute)</a>
 </li>
@@ -370,13 +394,7 @@
   <h2>E</h2>
   <table style="width: 100%" class="indextable genindextable"><tr>
     <td style="width: 33%; vertical-align: top;"><ul>
-        <li><a href="api/group_operations.html#gadd.group_operations.DecouplingGroup.element_index">element_index() (gadd.group_operations.DecouplingGroup method)</a>
-</li>
-    </ul></td>
-    <td style="width: 33%; vertical-align: top;"><ul>
-        <li><a href="api/group_operations.html#gadd.group_operations.DecouplingGroup.element_name">element_name() (gadd.group_operations.DecouplingGroup method)</a>
-</li>
-        <li><a href="api/group_operations.html#gadd.group_operations.DecouplingGroup.elements">elements (gadd.group_operations.DecouplingGroup attribute)</a>
+        <li><a href="api/gadd.html#gadd.gadd.GADD.evaluate">evaluate() (gadd.gadd.GADD method)</a>
 </li>
     </ul></td>
   </tr></table>
@@ -388,14 +406,22 @@
     <td style="width: 33%; vertical-align: top;"><ul>
         <li><a href="api/gadd.html#gadd.gadd.TrainingResult.final_population">final_population (gadd.gadd.TrainingResult attribute)</a>
 </li>
-    </ul></td>
-    <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="api/strategies.html#gadd.strategies.ColorAssignment.from_circuit">from_circuit() (gadd.strategies.ColorAssignment class method)</a>
+</li>
         <li><a href="api/gadd.html#gadd.gadd.TrainingConfig.from_dict">from_dict() (gadd.gadd.TrainingConfig class method)</a>
 
         <ul>
           <li><a href="api/gadd.html#gadd.gadd.TrainingState.from_dict">(gadd.gadd.TrainingState class method)</a>
 </li>
+          <li><a href="api/strategies.html#gadd.strategies.DDStrategy.from_dict">(gadd.strategies.DDStrategy class method)</a>
+</li>
         </ul></li>
+    </ul></td>
+    <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="api/strategies.html#gadd.strategies.ColorAssignment.from_manual_assignment">from_manual_assignment() (gadd.strategies.ColorAssignment class method)</a>
+</li>
+        <li><a href="api/strategies.html#gadd.strategies.DDStrategy.from_single_sequence">from_single_sequence() (gadd.strategies.DDStrategy class method)</a>
+</li>
     </ul></td>
   </tr></table>
 </section>
@@ -421,10 +447,10 @@
 </li>
         </ul></li>
         <li>
-    gadd.group_operations
+    gadd.strategies
 
         <ul>
-          <li><a href="api/group_operations.html#module-gadd.group_operations">module</a>
+          <li><a href="api/strategies.html#module-gadd.strategies">module</a>
 </li>
         </ul></li>
         <li>
@@ -434,8 +460,14 @@
           <li><a href="api/utility_functions.html#module-gadd.utility_functions">module</a>
 </li>
         </ul></li>
+        <li><a href="api/strategies.html#gadd.strategies.DDSequence.gates">gates (gadd.strategies.DDSequence attribute)</a>
+</li>
+        <li><a href="api/strategies.html#gadd.strategies.StandardSequences.get">get() (gadd.strategies.StandardSequences method)</a>
+</li>
     </ul></td>
     <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="api/strategies.html#gadd.strategies.ColorAssignment.get_color">get_color() (gadd.strategies.ColorAssignment method)</a>
+</li>
         <li><a href="api/circuit_padding.html#gadd.circuit_padding.get_instruction_duration">get_instruction_duration() (in module gadd.circuit_padding)</a>
 </li>
         <li><a href="api/utility_functions.html#gadd.utility_functions.CustomUtility.get_name">get_name() (gadd.utility_functions.CustomUtility method)</a>
@@ -450,6 +482,10 @@
           <li><a href="api/utility_functions.html#gadd.utility_functions.UtilityFunction.get_name">(gadd.utility_functions.UtilityFunction method)</a>
 </li>
         </ul></li>
+        <li><a href="api/strategies.html#gadd.strategies.ColorAssignment.get_qubits">get_qubits() (gadd.strategies.ColorAssignment method)</a>
+</li>
+        <li><a href="api/strategies.html#gadd.strategies.DDStrategy.get_sequence">get_sequence() (gadd.strategies.DDStrategy method)</a>
+</li>
         <li><a href="api/utility_functions.html#gadd.utility_functions.UtilityFactory.ghz_state">ghz_state() (gadd.utility_functions.UtilityFactory static method)</a>
 </li>
         <li><a href="api/utility_functions.html#gadd.utility_functions.GHZUtility">GHZUtility (class in gadd.utility_functions)</a>
@@ -462,14 +498,12 @@
   <h2>I</h2>
   <table style="width: 100%" class="indextable genindextable"><tr>
     <td style="width: 33%; vertical-align: top;"><ul>
-        <li><a href="api/group_operations.html#gadd.group_operations.DecouplingGroup.inverse_map">inverse_map (gadd.group_operations.DecouplingGroup attribute)</a>
+        <li><a href="api/strategies.html#gadd.strategies.StandardSequences.is_staggered">is_staggered() (gadd.strategies.StandardSequences method)</a>
 </li>
-        <li><a href="api/group_operations.html#gadd.group_operations.invert">invert() (in module gadd.group_operations)</a>
+        <li><a href="api/gadd.html#gadd.gadd.TrainingState.iteration">iteration (gadd.gadd.TrainingState attribute)</a>
 </li>
     </ul></td>
     <td style="width: 33%; vertical-align: top;"><ul>
-        <li><a href="api/gadd.html#gadd.gadd.TrainingState.iteration">iteration (gadd.gadd.TrainingState attribute)</a>
-</li>
         <li><a href="api/gadd.html#gadd.gadd.TrainingResult.iteration_data">iteration_data (gadd.gadd.TrainingResult attribute)</a>
 
         <ul>
@@ -483,6 +517,10 @@
 <section id="L" class="genindex-section">
   <h2>L</h2>
   <table style="width: 100%" class="indextable genindextable"><tr>
+    <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="api/strategies.html#gadd.strategies.StandardSequences.list_available">list_available() (gadd.strategies.StandardSequences method)</a>
+</li>
+    </ul></td>
     <td style="width: 33%; vertical-align: top;"><ul>
         <li><a href="api/gadd.html#gadd.gadd.GADD.load_training_state">load_training_state() (gadd.gadd.GADD method)</a>
 </li>
@@ -504,17 +542,13 @@
 </li>
           <li><a href="api/gadd.html#module-gadd.gadd">gadd.gadd</a>
 </li>
-          <li><a href="api/group_operations.html#module-gadd.group_operations">gadd.group_operations</a>
+          <li><a href="api/strategies.html#module-gadd.strategies">gadd.strategies</a>
 </li>
           <li><a href="api/utility_functions.html#module-gadd.utility_functions">gadd.utility_functions</a>
 </li>
         </ul></li>
     </ul></td>
     <td style="width: 33%; vertical-align: top;"><ul>
-        <li><a href="api/group_operations.html#gadd.group_operations.DecouplingGroup.multiplication">multiplication (gadd.group_operations.DecouplingGroup attribute)</a>
-</li>
-        <li><a href="api/group_operations.html#gadd.group_operations.multiply">multiply() (in module gadd.group_operations)</a>
-</li>
         <li><a href="api/gadd.html#gadd.gadd.TrainingConfig.mutation_decay">mutation_decay (gadd.gadd.TrainingConfig attribute)</a>
 </li>
         <li><a href="api/gadd.html#gadd.gadd.TrainingConfig.mutation_probability">mutation_probability (gadd.gadd.TrainingConfig attribute)</a>
@@ -531,9 +565,9 @@
   <h2>N</h2>
   <table style="width: 100%" class="indextable genindextable"><tr>
     <td style="width: 33%; vertical-align: top;"><ul>
-        <li><a href="api/gadd.html#gadd.gadd.TrainingConfig.n_iterations">n_iterations (gadd.gadd.TrainingConfig attribute)</a>
+        <li><a href="api/strategies.html#gadd.strategies.ColorAssignment.n_colors">n_colors (gadd.strategies.ColorAssignment property)</a>
 </li>
-        <li><a href="api/group_operations.html#gadd.group_operations.DecouplingGroup.names">names (gadd.group_operations.DecouplingGroup attribute)</a>
+        <li><a href="api/gadd.html#gadd.gadd.TrainingConfig.n_iterations">n_iterations (gadd.gadd.TrainingConfig attribute)</a>
 </li>
     </ul></td>
     <td style="width: 33%; vertical-align: top;"><ul>
@@ -579,16 +613,6 @@
   </tr></table>
 </section>
 
-<section id="R" class="genindex-section">
-  <h2>R</h2>
-  <table style="width: 100%" class="indextable genindextable"><tr>
-    <td style="width: 33%; vertical-align: top;"><ul>
-        <li><a href="api/gadd.html#gadd.gadd.GADD.run">run() (gadd.gadd.GADD method)</a>
-</li>
-    </ul></td>
-  </tr></table>
-</section>
-
 <section id="S" class="genindex-section">
   <h2>S</h2>
   <table style="width: 100%" class="indextable genindextable"><tr>
@@ -601,7 +625,7 @@
 </li>
     </ul></td>
     <td style="width: 33%; vertical-align: top;"><ul>
-        <li><a href="api/group_operations.html#gadd.group_operations.DecouplingGroup.size">size (gadd.group_operations.DecouplingGroup property)</a>
+        <li><a href="api/strategies.html#gadd.strategies.StandardSequences">StandardSequences (class in gadd.strategies)</a>
 </li>
         <li><a href="api/utility_functions.html#gadd.utility_functions.UtilityFactory.success_probability">success_probability() (gadd.utility_functions.UtilityFactory static method)</a>
 </li>
@@ -624,11 +648,17 @@
 </li>
           <li><a href="api/gadd.html#gadd.gadd.TrainingState.to_dict">(gadd.gadd.TrainingState method)</a>
 </li>
-        </ul></li>
-        <li><a href="api/circuit_padding.html#gadd.circuit_padding.DDPulse.to_gate">to_gate() (gadd.circuit_padding.DDPulse method)</a>
+          <li><a href="api/strategies.html#gadd.strategies.ColorAssignment.to_dict">(gadd.strategies.ColorAssignment method)</a>
 </li>
+          <li><a href="api/strategies.html#gadd.strategies.DDStrategy.to_dict">(gadd.strategies.DDStrategy method)</a>
+</li>
+        </ul></li>
     </ul></td>
     <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="api/circuit_padding.html#gadd.circuit_padding.DDPulse.to_gate">to_gate() (gadd.circuit_padding.DDPulse method)</a>
+</li>
+        <li><a href="api/strategies.html#gadd.strategies.DDSequence.to_indices">to_indices() (gadd.strategies.DDSequence method)</a>
+</li>
         <li><a href="api/gadd.html#gadd.gadd.GADD.train">train() (gadd.gadd.GADD method)</a>
 </li>
         <li><a href="api/gadd.html#gadd.gadd.TrainingResult.training_time">training_time (gadd.gadd.TrainingResult attribute)</a>
@@ -662,6 +692,10 @@
 <section id="V" class="genindex-section">
   <h2>V</h2>
   <table style="width: 100%" class="indextable genindextable"><tr>
+    <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="api/strategies.html#gadd.strategies.ColorAssignment.validate_coloring">validate_coloring() (gadd.strategies.ColorAssignment method)</a>
+</li>
+    </ul></td>
     <td style="width: 33%; vertical-align: top;"><ul>
         <li><a href="api/utility_functions.html#gadd.utility_functions.UtilityFunction.verify_state">verify_state() (gadd.utility_functions.UtilityFunction method)</a>
 </li>
