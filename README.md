@@ -1,5 +1,7 @@
 # GADD: Genetic Algorithm for Dynamical Decoupling optimization
 
+![Cover Image](./cover.svg)
+
 <!-- START_DOCS_INCLUDE -->
 
 [![Python 3.9+](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
@@ -8,8 +10,6 @@
 [![Coverage Status](https://coveralls.io/repos/github/qiskit-community/gadd/badge.svg?branch=main)](https://coveralls.io/github/qiskit-community/gadd?branch=main)
 
 **GADD** is a Python package for empirically optimizing dynamical decoupling (DD) sequences on quantum processors using a genetic algorithm as described in the research paper ["Empirical learning of dynamical decoupling on quantum processors"](https://arxiv.org/abs/2403.02294).
-
-![Cover Image](./cover.svg)
 
 ## Installation
 

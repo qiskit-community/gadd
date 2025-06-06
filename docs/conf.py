@@ -97,6 +97,8 @@ html_context = {
     "conf_py_path": "/docs/",
 }
 
+html_logo = "logo.svg"
+
 html_static_path = ["_static"]
 html_css_files = ["custom.css"]
 
