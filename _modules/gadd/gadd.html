@@ -269,23 +269,23 @@
 <span class="k">class</span> <span class="nc">TrainingConfig</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Configuration parameters for GADD training.</span>
 
+<span class="sd">    This class encapsulates all hyperparameters and settings needed to configure the genetic algorithm</span>
+<span class="sd">    optimization process for dynamical decoupling sequences. It provides sensible defaults based on the</span>
+<span class="sd">    empirical findings from the GADD paper while allowing full customization of the training process.</span>
+
 <span class="sd">    Args:</span>
-<span class="sd">        pop_size (int): Size of the population (``K`` in the paper).</span>
-<span class="sd">        sequence_length (int): Length of each DD sequence (``L`` in the paper).</span>
-<span class="sd">        parent_fraction (float): Fraction of population to use as parents for</span>
-<span class="sd">            reproduction. Default is 0.25 from the paper.</span>
-<span class="sd">        n_iterations (int): Number of GA iterations to run.</span>
-<span class="sd">        mutation_probability (float): Initial probability of mutation.</span>
-<span class="sd">        optimization_level (int): Qiskit transpilation optimization level.</span>
-<span class="sd">        shots (int): Number of shots for quantum circuit execution.</span>
-<span class="sd">        num_colors (int): Number of distinct sequences per strategy (``k`` in the</span>
-<span class="sd">            paper).</span>
-<span class="sd">        decoupling_group (DecouplingGroup): The decoupling group to use.</span>
-<span class="sd">            Default is ``G`` from the paper.</span>
-<span class="sd">        mode (str): Mode for generating initial population. Can be either ``uniform``</span>
-<span class="sd">            or ``random``.</span>
-<span class="sd">        dynamic_mutation (bool): Whether to dynamically adjust mutation probability.</span>
-<span class="sd">        mutation_decay (float): Factor to adjust mutation probability.</span>
+<span class="sd">        pop_size: Size of the population (``K`` in the paper).</span>
+<span class="sd">        sequence_length: Length of each DD sequence (``L`` in the paper).</span>
+<span class="sd">        parent_fraction: Fraction of population to use as parents for reproduction.</span>
+<span class="sd">        n_iterations: Number of GA iterations to run.</span>
+<span class="sd">        mutation_probability: Initial probability of mutation.</span>
+<span class="sd">        optimization_level: Qiskit transpilation optimization level.</span>
+<span class="sd">        shots: Number of shots for quantum circuit execution.</span>
+<span class="sd">        num_colors: Number of distinct sequences per strategy (``k`` in the paper).</span>
+<span class="sd">        decoupling_group: The decoupling group to use from :class:`.DecouplingGroup`.</span>
+<span class="sd">        mode: Mode for generating initial population (``uniform`` or ``random``).</span>
+<span class="sd">        dynamic_mutation: Whether to dynamically adjust mutation probability.</span>
+<span class="sd">        mutation_decay: Factor to adjust mutation probability.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">pop_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">16</span>
@@ -304,10 +304,10 @@
 <div class="viewcode-block" id="TrainingConfig.to_dict">
 <a class="viewcode-back" href="../../api/gadd.html#gadd.gadd.TrainingConfig.to_dict">[docs]</a>
     <span class="k">def</span> <span class="nf">to_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Serializes training configuration to a dictionary.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Serializes training configuration to a dictionary for JSON export or checkpointing.</span>
 
 <span class="sd">        Returns:</span>
-<span class="sd">            Dict[str, Any]: The serialized output.</span>
+<span class="sd">            Dictionary representation suitable for JSON serialization.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">data</span> <span class="o">=</span> <span class="n">asdict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
         <span class="c1"># Convert DecouplingGroup to dict for serialization</span>
@@ -324,13 +324,13 @@
 <a class="viewcode-back" href="../../api/gadd.html#gadd.gadd.TrainingConfig.from_dict">[docs]</a>
     <span class="nd">@classmethod</span>
     <span class="k">def</span> <span class="nf">from_dict</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="s2">&quot;TrainingConfig&quot;</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Deserializes a dictionary object to a ``TrainingConfig`` object.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Deserializes a dictionary object to a :class:`.TrainingConfig` object.</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            data (Dict[str, Any]): The serialized input.</span>
+<span class="sd">            data: The serialized input dictionary.</span>
 
 <span class="sd">        Returns:</span>
-<span class="sd">            TrainingConfig: The deserialized output.</span>
+<span class="sd">            The deserialized :class:`.TrainingConfig` instance.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1"># Convert decoupling_group dict back to DecouplingGroup</span>
         <span class="k">if</span> <span class="s2">&quot;decoupling_group&quot;</span> <span class="ow">in</span> <span class="n">data</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;decoupling_group&quot;</span><span class="p">],</span> <span class="nb">dict</span><span class="p">):</span>
@@ -364,7 +364,11 @@
 <a class="viewcode-back" href="../../api/gadd.html#gadd.gadd.TrainingState">[docs]</a>
 <span class="nd">@dataclass</span>
 <span class="k">class</span> <span class="nc">TrainingState</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;State of GADD training that can be serialized and resumed.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;State of GADD training that can be serialized and resumed.</span>
+
+<span class="sd">    This class encapsulates the complete state of a genetic algorithm training session,</span>
+<span class="sd">    enabling checkpointing and resumption of long-running optimization processes.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">population</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span>
     <span class="n">iteration</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
@@ -377,6 +381,11 @@
 <div class="viewcode-block" id="TrainingState.to_dict">
 <a class="viewcode-back" href="../../api/gadd.html#gadd.gadd.TrainingState.to_dict">[docs]</a>
     <span class="k">def</span> <span class="nf">to_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Serializes training state to a dictionary for checkpointing.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Dictionary representation suitable for JSON serialization.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">asdict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span></div>
 
 
@@ -384,6 +393,14 @@
 <a class="viewcode-back" href="../../api/gadd.html#gadd.gadd.TrainingState.from_dict">[docs]</a>
     <span class="nd">@classmethod</span>
     <span class="k">def</span> <span class="nf">from_dict</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="s2">&quot;TrainingState&quot;</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Deserializes a dictionary to a :class:`.TrainingState` object.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            data: The serialized input dictionary.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            The deserialized :class:`.TrainingState` instance.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="o">**</span><span class="n">data</span><span class="p">)</span></div>
 </div>
 
@@ -393,7 +410,12 @@
 <a class="viewcode-back" href="../../api/gadd.html#gadd.gadd.TrainingResult">[docs]</a>
 <span class="nd">@dataclass</span>
 <span class="k">class</span> <span class="nc">TrainingResult</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Results from GADD training.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Results from GADD training.</span>
+
+<span class="sd">    This class encapsulates all outputs and metrics from a completed genetic algorithm</span>
+<span class="sd">    training session, including the best strategy found, performance data, and</span>
+<span class="sd">    comparison against standard dynamical decoupling sequences.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">best_sequence</span><span class="p">:</span> <span class="n">DDStrategy</span>
     <span class="n">best_score</span><span class="p">:</span> <span class="nb">float</span>
@@ -409,7 +431,7 @@
 <div class="viewcode-block" id="TrainingResult.__post_init__">
 <a class="viewcode-back" href="../../api/gadd.html#gadd.gadd.TrainingResult.__post_init__">[docs]</a>
     <span class="k">def</span> <span class="nf">__post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Extract benchmark history from iteration data.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Extract benchmark history from iteration data if not already provided.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">iteration_data</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">benchmark_history</span><span class="p">:</span>
             <span class="c1"># Extract benchmark scores from iteration data</span>
             <span class="n">benchmarks</span> <span class="o">=</span> <span class="p">{}</span>
@@ -425,6 +447,11 @@
 <div class="viewcode-block" id="TrainingResult.to_dict">
 <a class="viewcode-back" href="../../api/gadd.html#gadd.gadd.TrainingResult.to_dict">[docs]</a>
     <span class="k">def</span> <span class="nf">to_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Serializes training result to a dictionary for export or analysis.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Dictionary representation suitable for JSON serialization.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">result_dict</span> <span class="o">=</span> <span class="n">asdict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
         <span class="n">result_dict</span><span class="p">[</span><span class="s2">&quot;best_sequence&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">best_sequence</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()</span>
         <span class="n">result_dict</span><span class="p">[</span><span class="s2">&quot;config&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()</span>
@@ -467,7 +494,13 @@
 <div class="viewcode-block" id="GADD">
 <a class="viewcode-back" href="../../api/gadd.html#gadd.gadd.GADD">[docs]</a>
 <span class="k">class</span> <span class="nc">GADD</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Genetic Algorithm for Dynamical Decoupling optimization.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Genetic Algorithm for Dynamical Decoupling optimization.</span>
+
+<span class="sd">    This class implements the core GADD algorithm for empirically optimizing dynamical</span>
+<span class="sd">    decoupling sequences on quantum processors using genetic algorithms. It evolves</span>
+<span class="sd">    populations of DD strategies to find the best-performing strategy as evaluated</span>
+<span class="sd">    by the specified utility function.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
 
 <div class="viewcode-block" id="GADD.__init__">
 <a class="viewcode-back" href="../../api/gadd.html#gadd.gadd.GADD.__init__">[docs]</a>
@@ -479,7 +512,15 @@
         <span class="n">seed</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">SeedSequence</span><span class="p">,</span> <span class="n">BitGenerator</span><span class="p">,</span> <span class="n">Generator</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">config</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">TrainingConfig</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize the GADD class.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize the GADD optimizer with backend and configuration parameters.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            backend: Quantum backend for circuit execution and device properties.</span>
+<span class="sd">            utility_function: Function to evaluate circuit performance.</span>
+<span class="sd">            coloring: Qubit coloring for multi-color DD strategies.</span>
+<span class="sd">            seed: Random seed for reproducible results.</span>
+<span class="sd">            config: Training configuration parameters.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_backend</span> <span class="o">=</span> <span class="n">backend</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_utility_function</span> <span class="o">=</span> <span class="n">utility_function</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_seed</span> <span class="o">=</span> <span class="n">seed</span>
@@ -604,29 +645,35 @@
         <span class="n">utility_function</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">Callable</span><span class="p">,</span> <span class="n">UtilityFunction</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">mode</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">save_iterations</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
-        <span class="n">benchmark_strategies</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">DDStrategy</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">benchmark_strategies</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">List</span><span class="p">[</span><span class="n">DDStrategy</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">evaluate_benchmarks_each_iteration</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
         <span class="n">resume_from_state</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">TrainingState</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">save_path</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">DDStrategy</span><span class="p">,</span> <span class="n">TrainingResult</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Train DD sequences using genetic algorithm.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Train DD sequences using genetic algorithm optimization.</span>
+
+<span class="sd">        This method executes the core GADD algorithm, evolving a population of DD</span>
+<span class="sd">        strategies over multiple generations to optimize performance on the training</span>
+<span class="sd">        circuit. The process includes population initialization, fitness evaluation,</span>
+<span class="sd">        selection, crossover, mutation, and optional benchmarking against standard</span>
+<span class="sd">        DD sequences.</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            sampler: Qiskit Sampler for circuit execution.</span>
-<span class="sd">            training_circuit: Circuit to train on.</span>
-<span class="sd">            utility_function: Function to evaluate circuit performance.</span>
-<span class="sd">                Can be a callable(circuit, result) -&gt; float or a :class:`.UtilityFunction` instance.</span>
-<span class="sd">            mode: Population initialization mode (&#39;random&#39; or &#39;uniform&#39;).</span>
-<span class="sd">            save_iterations: Whether to save iteration data.</span>
-<span class="sd">            benchmark_strategies: DD strategies to compare against. Must be a list of</span>
-<span class="sd">                :class:`.DDStrategy` objects.</span>
-<span class="sd">            evaluate_benchmarks_each_iteration: If ``True``, evaluate benchmarks at each</span>
-<span class="sd">                iteration. If ``False``, only evaluate at the end.</span>
-<span class="sd">            resume_from_state: Previous training state to resume from.</span>
-<span class="sd">            save_path: Path to save training checkpoints.</span>
+<span class="sd">            sampler: :class:`qiskit_ibm_runtime.SamplerV2` for circuit execution.</span>
+<span class="sd">            training_circuit: Quantum circuit to optimize DD sequences for.</span>
+<span class="sd">            utility_function: Function to evaluate circuit performance, either a</span>
+<span class="sd">                callable(circuit, result) -&gt; float or :class:`.UtilityFunction`.</span>
+<span class="sd">            mode: Population initialization mode (``random`` or ``uniform``).</span>
+<span class="sd">            save_iterations: Whether to save iteration data for analysis.</span>
+<span class="sd">            benchmark_strategies: DD strategies to compare against, either standard</span>
+<span class="sd">                sequence names or :class:`.DDStrategy` objects.</span>
+<span class="sd">            evaluate_benchmarks_each_iteration: Whether to evaluate benchmarks at</span>
+<span class="sd">                each iteration or only at the end.</span>
+<span class="sd">            resume_from_state: Previous :class:`.TrainingState` to resume from.</span>
+<span class="sd">            save_path: Directory path to save training checkpoints.</span>
 
 <span class="sd">        Returns:</span>
-<span class="sd">            Tuple of (best_strategy, training_result).</span>
+<span class="sd">            Tuple of the best :class:`.DDStrategy` and :class:`.TrainingResult`.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">start_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
 
@@ -663,11 +710,25 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">_training_state</span><span class="o">.</span><span class="n">mutation_probability</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">mutation_probability</span>
 
         <span class="c1"># Prepare benchmark strategies</span>
-        <span class="n">benchmark_strategy_map</span> <span class="o">=</span> <span class="p">{}</span>  <span class="c1"># name -&gt; DDStrategy</span>
+        <span class="n">benchmark_strategy_map</span> <span class="o">=</span> <span class="p">{}</span>  <span class="c1"># name -&gt; (DDStrategy, staggered)</span>
         <span class="k">if</span> <span class="n">benchmark_strategies</span><span class="p">:</span>
+            <span class="n">standard_seqs</span> <span class="o">=</span> <span class="n">StandardSequences</span><span class="p">()</span>
             <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">benchmark</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">benchmark_strategies</span><span class="p">):</span>
-                <span class="n">name</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;custom_strategy_</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">&quot;</span>
-                <span class="n">benchmark_strategy_map</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">benchmark</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">benchmark</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+                    <span class="c1"># Convert string name to DDStrategy</span>
+                    <span class="n">name</span> <span class="o">=</span> <span class="n">benchmark</span>
+                    <span class="n">sequence</span> <span class="o">=</span> <span class="n">standard_seqs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">benchmark</span><span class="p">)</span>
+                    <span class="n">strategy</span> <span class="o">=</span> <span class="n">DDStrategy</span><span class="o">.</span><span class="n">from_single_sequence</span><span class="p">(</span><span class="n">sequence</span><span class="p">)</span>
+                    <span class="n">staggered</span> <span class="o">=</span> <span class="n">standard_seqs</span><span class="o">.</span><span class="n">is_staggered</span><span class="p">(</span><span class="n">benchmark</span><span class="p">)</span>
+                    <span class="n">benchmark_strategy_map</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">strategy</span><span class="p">,</span> <span class="n">staggered</span><span class="p">)</span>
+                <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">benchmark</span><span class="p">,</span> <span class="n">DDStrategy</span><span class="p">):</span>
+                    <span class="c1"># Use DDStrategy directly with generic name</span>
+                    <span class="n">name</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;custom_strategy_</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">&quot;</span>
+                    <span class="n">benchmark_strategy_map</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">benchmark</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+                        <span class="sa">f</span><span class="s2">&quot;benchmark_strategies must contain strings or DDStrategy objects, got </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">benchmark</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
+                    <span class="p">)</span>
 
         <span class="n">benchmark_history</span> <span class="o">=</span> <span class="p">{}</span> <span class="k">if</span> <span class="n">evaluate_benchmarks_each_iteration</span> <span class="k">else</span> <span class="kc">None</span>
 
@@ -687,7 +748,7 @@
             <span class="k">if</span> <span class="n">evaluate_benchmarks_each_iteration</span> <span class="ow">and</span> <span class="n">benchmark_strategy_map</span><span class="p">:</span>
                 <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;  Evaluating benchmark strategies...&quot;</span><span class="p">)</span>
                 <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="p">(</span><span class="n">strategy</span><span class="p">,</span> <span class="n">staggered</span><span class="p">)</span> <span class="ow">in</span> <span class="n">benchmark_strategy_map</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-                    <span class="n">padded_circuit</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">apply_dd</span><span class="p">(</span>
+                    <span class="n">padded_circuit</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">apply_strategy</span><span class="p">(</span>
                         <span class="n">strategy</span><span class="p">,</span> <span class="n">training_circuit</span><span class="p">,</span> <span class="n">staggered</span><span class="o">=</span><span class="n">staggered</span>
                     <span class="p">)</span>
                     <span class="n">job</span> <span class="o">=</span> <span class="n">sampler</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">padded_circuit</span><span class="p">,</span> <span class="n">shots</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">shots</span><span class="p">)</span>
