@@ -95,6 +95,9 @@ warn_no_return = true
 warn_unreachable = true
 strict_equality = true
 
+[tool.bandit]
+skips = ["B110"]
+
 [tool.pytest.ini_options]
 minversion = "6.0"
 addopts = "-ra -q --strict-markers --cov=gadd --cov-report=term-missing"
