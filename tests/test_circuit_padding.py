@@ -292,6 +292,9 @@ class TestCircuitPadding(unittest.TestCase):
 class TestIntegration(unittest.TestCase):
     """Integration tests for circuit padding."""
 
+    def setUp(self):
+        self.backend = MockBackend()
+
     def test_ghz_circuit_padding(self):
         """Test padding a GHZ state preparation circuit."""
         # Create GHZ circuit

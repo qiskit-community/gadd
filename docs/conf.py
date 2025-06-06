@@ -72,6 +72,10 @@ intersphinx_mapping = {
     "python": ("https://docs.python.org/3/", None),
     "numpy": ("https://numpy.org/doc/stable/", None),
     "qiskit": ("https://qiskit.org/documentation/", None),
+    "qiskit-ibm-runtime": (
+        "https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/",
+        None,
+    ),
     "matplotlib": ("https://matplotlib.org/stable/", None),
 }
 

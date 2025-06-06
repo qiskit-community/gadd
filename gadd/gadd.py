@@ -32,23 +32,23 @@ from .utility_functions import UtilityFunction, SuccessProbability
 class TrainingConfig:
     """Configuration parameters for GADD training.
 
+    This class encapsulates all hyperparameters and settings needed to configure the genetic algorithm
+    optimization process for dynamical decoupling sequences. It provides sensible defaults based on the
+    empirical findings from the GADD paper while allowing full customization of the training process.
+
     Args:
-        pop_size (int): Size of the population (``K`` in the paper).
-        sequence_length (int): Length of each DD sequence (``L`` in the paper).
-        parent_fraction (float): Fraction of population to use as parents for
-            reproduction. Default is 0.25 from the paper.
-        n_iterations (int): Number of GA iterations to run.
-        mutation_probability (float): Initial probability of mutation.
-        optimization_level (int): Qiskit transpilation optimization level.
-        shots (int): Number of shots for quantum circuit execution.
-        num_colors (int): Number of distinct sequences per strategy (``k`` in the
-            paper).
-        decoupling_group (DecouplingGroup): The decoupling group to use.
-            Default is ``G`` from the paper.
-        mode (str): Mode for generating initial population. Can be either ``uniform``
-            or ``random``.
-        dynamic_mutation (bool): Whether to dynamically adjust mutation probability.
-        mutation_decay (float): Factor to adjust mutation probability.
+        pop_size: Size of the population (``K`` in the paper).
+        sequence_length: Length of each DD sequence (``L`` in the paper).
+        parent_fraction: Fraction of population to use as parents for reproduction.
+        n_iterations: Number of GA iterations to run.
+        mutation_probability: Initial probability of mutation.
+        optimization_level: Qiskit transpilation optimization level.
+        shots: Number of shots for quantum circuit execution.
+        num_colors: Number of distinct sequences per strategy (``k`` in the paper).
+        decoupling_group: The decoupling group to use from :class:`.DecouplingGroup`.
+        mode: Mode for generating initial population (``uniform`` or ``random``).
+        dynamic_mutation: Whether to dynamically adjust mutation probability.
+        mutation_decay: Factor to adjust mutation probability.
     """
 
     pop_size: int = 16
@@ -65,10 +65,10 @@ class TrainingConfig:
     mutation_decay: float = 0.1
 
     def to_dict(self) -> Dict[str, Any]:
-        """Serializes training configuration to a dictionary.
+        """Serializes training configuration to a dictionary for JSON export or checkpointing.
 
         Returns:
-            Dict[str, Any]: The serialized output.
+            Dictionary representation suitable for JSON serialization.
         """
         data = asdict(self)
         # Convert DecouplingGroup to dict for serialization
@@ -82,13 +82,13 @@ class TrainingConfig:
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> "TrainingConfig":
-        """Deserializes a dictionary object to a ``TrainingConfig`` object.
+        """Deserializes a dictionary object to a :class:`.TrainingConfig` object.
 
         Args:
-            data (Dict[str, Any]): The serialized input.
+            data: The serialized input dictionary.
 
         Returns:
-            TrainingConfig: The deserialized output.
+            The deserialized :class:`.TrainingConfig` instance.
         """
         # Convert decoupling_group dict back to DecouplingGroup
         if "decoupling_group" in data and isinstance(data["decoupling_group"], dict):
@@ -115,7 +115,11 @@ class TrainingConfig:
 
 @dataclass
 class TrainingState:
-    """State of GADD training that can be serialized and resumed."""
+    """State of GADD training that can be serialized and resumed.
+
+    This class encapsulates the complete state of a genetic algorithm training session,
+    enabling checkpointing and resumption of long-running optimization processes.
+    """
 
     population: List[str] = field(default_factory=list)
     iteration: int = 0
@@ -126,16 +130,34 @@ class TrainingState:
     timestamp: str = field(default_factory=lambda: datetime.now().isoformat())
 
     def to_dict(self) -> Dict[str, Any]:
+        """Serializes training state to a dictionary for checkpointing.
+
+        Returns:
+            Dictionary representation suitable for JSON serialization.
+        """
         return asdict(self)
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> "TrainingState":
+        """Deserializes a dictionary to a :class:`.TrainingState` object.
+
+        Args:
+            data: The serialized input dictionary.
+
+        Returns:
+            The deserialized :class:`.TrainingState` instance.
+        """
         return cls(**data)
 
 
 @dataclass
 class TrainingResult:
-    """Results from GADD training."""
+    """Results from GADD training.
+
+    This class encapsulates all outputs and metrics from a completed genetic algorithm
+    training session, including the best strategy found, performance data, and
+    comparison against standard dynamical decoupling sequences.
+    """
 
     best_sequence: DDStrategy
     best_score: float
@@ -149,7 +171,7 @@ class TrainingResult:
     )
 
     def __post_init__(self):
-        """Extract benchmark history from iteration data."""
+        """Extract benchmark history from iteration data if not already provided."""
         if self.iteration_data and not self.benchmark_history:
             # Extract benchmark scores from iteration data
             benchmarks = {}
@@ -162,6 +184,11 @@ class TrainingResult:
             self.benchmark_history = benchmarks
 
     def to_dict(self) -> Dict[str, Any]:
+        """Serializes training result to a dictionary for export or analysis.
+
+        Returns:
+            Dictionary representation suitable for JSON serialization.
+        """
         result_dict = asdict(self)
         result_dict["best_sequence"] = self.best_sequence.to_dict()
         result_dict["config"] = self.config.to_dict()
@@ -197,7 +224,13 @@ class TrainingResult:
 
 
 class GADD:
-    """Genetic Algorithm for Dynamical Decoupling optimization."""
+    """Genetic Algorithm for Dynamical Decoupling optimization.
+
+    This class implements the core GADD algorithm for empirically optimizing dynamical
+    decoupling sequences on quantum processors using genetic algorithms. It evolves
+    populations of DD strategies to find the best-performing strategy as evaluated
+    by the specified utility function.
+    """
 
     def __init__(
         self,
@@ -207,7 +240,15 @@ class GADD:
         seed: Optional[Union[int, SeedSequence, BitGenerator, Generator]] = None,
         config: Optional[TrainingConfig] = None,
     ):
-        """Initialize the GADD class."""
+        """Initialize the GADD optimizer with backend and configuration parameters.
+
+        Args:
+            backend: Quantum backend for circuit execution and device properties.
+            utility_function: Function to evaluate circuit performance.
+            coloring: Qubit coloring for multi-color DD strategies.
+            seed: Random seed for reproducible results.
+            config: Training configuration parameters.
+        """
         self._backend = backend
         self._utility_function = utility_function
         self._seed = seed
@@ -326,29 +367,35 @@ class GADD:
         utility_function: Optional[Union[Callable, UtilityFunction]] = None,
         mode: Optional[str] = None,
         save_iterations: bool = True,
-        benchmark_strategies: Optional[List[DDStrategy]] = None,
+        benchmark_strategies: Optional[Union[List[str], List[DDStrategy]]] = None,
         evaluate_benchmarks_each_iteration: bool = False,
         resume_from_state: Optional[TrainingState] = None,
         save_path: Optional[str] = None,
     ) -> Tuple[DDStrategy, TrainingResult]:
-        """Train DD sequences using genetic algorithm.
+        """Train DD sequences using genetic algorithm optimization.
+
+        This method executes the core GADD algorithm, evolving a population of DD
+        strategies over multiple generations to optimize performance on the training
+        circuit. The process includes population initialization, fitness evaluation,
+        selection, crossover, mutation, and optional benchmarking against standard
+        DD sequences.
 
         Args:
-            sampler: Qiskit Sampler for circuit execution.
-            training_circuit: Circuit to train on.
-            utility_function: Function to evaluate circuit performance.
-                Can be a callable(circuit, result) -> float or a :class:`.UtilityFunction` instance.
-            mode: Population initialization mode ('random' or 'uniform').
-            save_iterations: Whether to save iteration data.
-            benchmark_strategies: DD strategies to compare against. Must be a list of
-                :class:`.DDStrategy` objects.
-            evaluate_benchmarks_each_iteration: If ``True``, evaluate benchmarks at each
-                iteration. If ``False``, only evaluate at the end.
-            resume_from_state: Previous training state to resume from.
-            save_path: Path to save training checkpoints.
+            sampler: :class:`qiskit_ibm_runtime.SamplerV2` for circuit execution.
+            training_circuit: Quantum circuit to optimize DD sequences for.
+            utility_function: Function to evaluate circuit performance, either a
+                callable(circuit, result) -> float or :class:`.UtilityFunction`.
+            mode: Population initialization mode (``random`` or ``uniform``).
+            save_iterations: Whether to save iteration data for analysis.
+            benchmark_strategies: DD strategies to compare against, either standard
+                sequence names or :class:`.DDStrategy` objects.
+            evaluate_benchmarks_each_iteration: Whether to evaluate benchmarks at
+                each iteration or only at the end.
+            resume_from_state: Previous :class:`.TrainingState` to resume from.
+            save_path: Directory path to save training checkpoints.
 
         Returns:
-            Tuple of (best_strategy, training_result).
+            Tuple of the best :class:`.DDStrategy` and :class:`.TrainingResult`.
         """
         start_time = time.time()
 
@@ -385,11 +432,25 @@ class GADD:
             self._training_state.mutation_probability = self.config.mutation_probability
 
         # Prepare benchmark strategies
-        benchmark_strategy_map = {}  # name -> DDStrategy
+        benchmark_strategy_map = {}  # name -> (DDStrategy, staggered)
         if benchmark_strategies:
+            standard_seqs = StandardSequences()
             for i, benchmark in enumerate(benchmark_strategies):
-                name = f"custom_strategy_{i}"
-                benchmark_strategy_map[name] = (benchmark, False)
+                if isinstance(benchmark, str):
+                    # Convert string name to DDStrategy
+                    name = benchmark
+                    sequence = standard_seqs.get(benchmark)
+                    strategy = DDStrategy.from_single_sequence(sequence)
+                    staggered = standard_seqs.is_staggered(benchmark)
+                    benchmark_strategy_map[name] = (strategy, staggered)
+                elif isinstance(benchmark, DDStrategy):
+                    # Use DDStrategy directly with generic name
+                    name = f"custom_strategy_{i}"
+                    benchmark_strategy_map[name] = (benchmark, False)
+                else:
+                    raise TypeError(
+                        f"benchmark_strategies must contain strings or DDStrategy objects, got {type(benchmark)}"
+                    )
 
         benchmark_history = {} if evaluate_benchmarks_each_iteration else None
 
@@ -409,7 +470,7 @@ class GADD:
             if evaluate_benchmarks_each_iteration and benchmark_strategy_map:
                 print("  Evaluating benchmark strategies...")
                 for name, (strategy, staggered) in benchmark_strategy_map.items():
-                    padded_circuit = self.apply_dd(
+                    padded_circuit = self.apply_strategy(
                         strategy, training_circuit, staggered=staggered
                     )
                     job = sampler.run(padded_circuit, shots=self.config.shots)

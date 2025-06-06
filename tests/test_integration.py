@@ -78,18 +78,18 @@ class TestIntegration(unittest.TestCase):
 
         utility_function = UtilityFactory.custom(improving_utility, "Test Utility")
 
-        # Train with comparison sequences
+        # Train with benchmark strategies
         best_strategy, result = gadd.train(
             sampler=self.sampler,
             training_circuit=circuit,
             utility_function=utility_function,
-            comparison_seqs=["xy4", "cpmg"],
+            benchmark_strategies=["xy4", "cpmg"],
         )
 
         # Verify training completed
         self.assertEqual(len(result.iteration_data), 3)
-        self.assertIn("xy4", result.comparison_data)
-        self.assertIn("cpmg", result.comparison_data)
+        self.assertIn("xy4", result.benchmark_scores)
+        self.assertIn("cpmg", result.benchmark_scores)
 
         # Test applying DD to target circuit
         target_circuit = QuantumCircuit(2)
@@ -290,7 +290,7 @@ class TestIntegration(unittest.TestCase):
                     "std_score": 0.05,
                 },
             ],
-            comparison_data={"xy4": 0.85, "cpmg": 0.8},
+            benchmark_scores={"xy4": 0.85, "cpmg": 0.8},
             final_population=["seq1", "seq2", "seq3", "seq4"],
             config=TrainingConfig(),
             training_time=123.45,

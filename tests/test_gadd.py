@@ -256,10 +256,10 @@ class TestGADDTraining(unittest.TestCase):
 
     def test_evaluate_standard_sequences(self):
         """Test standard sequence evaluation."""
-        comparison_seqs = ["xy4", "cpmg"]
+        benchmark_strategies = ["xy4", "cpmg"]
 
         scores = self.gadd._evaluate_standard_sequences(
-            comparison_seqs, self.sampler, self.circuit, self.utility_function
+            benchmark_strategies, self.sampler, self.circuit, self.utility_function
         )
 
         # Check all sequences evaluated
@@ -318,20 +318,20 @@ class TestGADDTraining(unittest.TestCase):
         last_score = result.iteration_data[-1]["best_score"]
         self.assertGreater(last_score, first_score)
 
-    def test_train_with_comparison(self):
-        """Test training with comparison sequences."""
+    def test_train_with_benchmark(self):
+        """Test training with benchmark strategies."""
         strategy, result = self.gadd.train(
             self.sampler,
             self.circuit,
             self.utility_function,
-            comparison_seqs=["xy4", "cpmg"],
+            benchmark_strategies=["xy4", "cpmg"],
         )
 
-        # Check comparison data
-        self.assertIn("xy4", result.comparison_data)
-        self.assertIn("cpmg", result.comparison_data)
-        self.assertEqual(result.comparison_data["xy4"], 0.75)
-        self.assertEqual(result.comparison_data["cpmg"], 0.75)
+        # Check benchmark data
+        self.assertIn("xy4", result.benchmark_scores)
+        self.assertIn("cpmg", result.benchmark_scores)
+        self.assertEqual(result.benchmark_scores["xy4"], 0.75)
+        self.assertEqual(result.benchmark_scores["cpmg"], 0.75)
 
     def test_save_and_resume_training(self):
         """Test checkpoint save and resume."""
@@ -452,7 +452,7 @@ class TestTrainingResult(unittest.TestCase):
             best_sequence=strategy,
             best_score=0.95,
             iteration_data=[{"iteration": 0, "score": 0.9}],
-            comparison_data={"xy4": 0.8},
+            benchmark_scores={"xy4": 0.8},
             final_population=["seq1", "seq2"],
             config=config,
             training_time=123.45,

@@ -153,7 +153,7 @@ class TestExperiments(unittest.TestCase):
             best_sequence=mock_strategy,
             best_score=0.95,
             iteration_data=[],
-            comparison_data={},
+            benchmark_scores={},
             final_population=[],
             config=self.config,
             training_time=10.0,
@@ -193,21 +193,21 @@ class TestExperiments(unittest.TestCase):
         self.assertEqual(circuit.num_qubits, 5)
 
     @patch("gadd.experiments.GADD.train")
-    def test_run_bv_experiment_comparison_seqs(self, mock_train):
-        """Test BV experiment with custom comparison sequences."""
+    def test_run_bv_experiment_benchmark_strategies(self, mock_train):
+        """Test BV experiment with custom benchmark strategies."""
         mock_strategy = DDStrategy.from_single_sequence(Mock())
         mock_result = Mock()
         mock_train.return_value = (mock_strategy, mock_result)
 
-        # Run with custom comparison sequences
+        # Run with custom benchmark strategies
         custom_seqs = ["xy4", "edd"]
         result = run_bv_experiment(
-            self.gadd, self.sampler, n=3, comparison_seqs=custom_seqs
+            self.gadd, self.sampler, n=3, benchmark_strategies=custom_seqs
         )
 
-        # Check comparison_seqs was passed
+        # Check benchmark_strategies was passed
         kwargs = mock_train.call_args[1]
-        self.assertEqual(kwargs["comparison_seqs"], custom_seqs)
+        self.assertEqual(kwargs["benchmark_strategies"], custom_seqs)
 
     @patch("gadd.experiments.GADD.train")
     def test_run_bv_experiment_kwargs(self, mock_train):
@@ -331,8 +331,8 @@ class TestExperimentEdgeCases(unittest.TestCase):
         self.assertIn("h", gates)
         self.assertNotIn("cx", gates)  # No CX for single qubit
 
-    def test_bv_experiment_default_comparison_seqs(self):
-        """Test default comparison sequences for BV experiment."""
+    def test_bv_experiment_default_benchmark_strategies(self):
+        """Test default benchmark strategies for BV experiment."""
         backend = MockBackend()
         gadd = GADD(backend=backend, config=TrainingConfig(n_iterations=1))
         sampler = MockSampler()
@@ -344,7 +344,7 @@ class TestExperimentEdgeCases(unittest.TestCase):
 
             run_bv_experiment(gadd, sampler, n=3)
 
-            # Check default comparison sequences
+            # Check default benchmark strategies
             kwargs = mock_train.call_args[1]
             expected_seqs = [
                 "cpmg",
@@ -355,10 +355,10 @@ class TestExperimentEdgeCases(unittest.TestCase):
                 "edd_staggered",
                 "urdd",
             ]
-            self.assertEqual(kwargs["comparison_seqs"], expected_seqs)
+            self.assertEqual(kwargs["benchmark_strategies"], expected_seqs)
 
-    def test_ghz_experiment_default_comparison_seqs(self):
-        """Test default comparison sequences for GHZ experiment."""
+    def test_ghz_experiment_default_benchmark_strategies(self):
+        """Test default benchmark strategies for GHZ experiment."""
         backend = MockBackend()
         gadd = GADD(backend=backend, config=TrainingConfig(n_iterations=1))
         sampler = MockSampler()
@@ -370,7 +370,7 @@ class TestExperimentEdgeCases(unittest.TestCase):
 
             run_ghz_experiment(gadd, sampler, n_qubits=3)
 
-            # Check default comparison sequences (no URDD for GHZ)
+            # Check default benchmark strategies (no URDD for GHZ)
             kwargs = mock_train.call_args[1]
             expected_seqs = [
                 "cpmg",
@@ -380,7 +380,7 @@ class TestExperimentEdgeCases(unittest.TestCase):
                 "edd",
                 "edd_staggered",
             ]
-            self.assertEqual(kwargs["comparison_seqs"], expected_seqs)
+            self.assertEqual(kwargs["benchmark_strategies"], expected_seqs)
 
 
 if __name__ == "__main__":
