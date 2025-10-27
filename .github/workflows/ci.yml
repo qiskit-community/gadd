@@ -161,7 +161,7 @@ jobs:
         bandit -r gadd/
 
     - name: Upload security reports
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v5
       if: always()
       with:
         name: security-reports
@@ -205,7 +205,7 @@ jobs:
         tar -Jcvf docs-build.tar.xz docs/_build/html
 
     - name: Upload artifacts
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v5
       with:
         name: docs-build
         path: docs-build.tar.xz
@@ -239,7 +239,7 @@ jobs:
         twine check dist/*
 
     - name: Upload build artifacts
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v5
       with:
         name: dist
         path: dist/
